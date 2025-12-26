@@ -98,9 +98,20 @@ export const createAttribute = createAsyncThunk<Attribute, Partial<Attribute>>(
       const response = await axiosInstance.post("/attribute", data, {
         headers: { "x-tenant": getTenantFromURL() },
       });
-      return response.data;
+      
+      // Handle different response structures
+      if (response.data.success === false) {
+        return rejectWithValue(response.data.message || "Failed to create attribute");
+      }
+      
+      // Return the data from response (could be response.data.data or response.data)
+      return response.data.data || response.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.body?.message ||
+                          err.message || 
+                          "Failed to create attribute. Please try again.";
+      return rejectWithValue(errorMessage);
     }
   }
 );

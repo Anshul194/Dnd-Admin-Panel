@@ -100,11 +100,14 @@ const AddAttribute = () => {
       }, 1000);
     } catch (err: any) {
       // Show API error message if available
-      const errorMsg =
-      err||
-        err?.message ||
-        err?.response?.data?.message ||
-        "Failed to create attribute. Please try again.";
+      const errorMsg = typeof err === 'string' 
+        ? err 
+        : err?.message || 
+          err?.response?.data?.message || 
+          "Failed to create attribute. Please try again.";
+      
+      console.error("Attribute creation error:", err);
+      
       setPopup({
         isVisible: true,
         message: errorMsg,
