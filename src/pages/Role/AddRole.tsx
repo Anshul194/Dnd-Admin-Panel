@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
@@ -16,6 +17,7 @@ interface ModulePermission {
 }
 
 export default function AddRole() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState({
     name: "",
@@ -178,6 +180,11 @@ export default function AddRole() {
         tenantId: user?.isSuperAdmin ? null : user?.tenant,
         modulePermissions: [],
       });
+
+      // Redirect to role list after a short delay
+      setTimeout(() => {
+        navigate("/roles/list");
+      }, 1500);
     } catch (err: any) {
   
         typeof err === 'string' 

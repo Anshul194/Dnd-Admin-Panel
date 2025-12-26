@@ -422,6 +422,10 @@ const variantSlice = createSlice({
         state.attributes = state.attributes.filter(
           (attr) => attr._id !== action.payload
         );
+        // Remove deleted variant from state.variants
+        state.variants = state.variants.filter(
+          (variant) => variant._id !== action.payload
+        );
       })
       .addCase(deleteAttribute.rejected, (state, action) => {
         state.loading = false;

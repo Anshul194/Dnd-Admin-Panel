@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
@@ -9,7 +10,6 @@ import PopupAlert from "../../components/popUpAlert";
 import { fetchTenants } from "../../store/slices/tenant";
 import { fetchModules } from "../../store/slices/moduleSlice";
 import { fetchRoleById, updateRole } from "../../store/slices/roles";
-import { useParams } from "react-router";
 
 interface ModulePermission {
   module: string;
@@ -17,6 +17,7 @@ interface ModulePermission {
 }
 
 export default function EditRole() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState({
     name: "",
@@ -152,18 +153,23 @@ export default function EditRole() {
         tenantId: role.scope === "global" ? null : role.tenantId,
       };
 
-      // Create the role
-      const createdRole = await dispatch(
+      // Update the role
+      const updatedRole = await dispatch(
         updateRole({ id: roleId, data: roleData })
       ).unwrap();
 
-      console.log("Created Role:", createdRole);
+      console.log("Updated Role:", updatedRole);
 
       setPopup({
         isVisible: true,
         message: "Role Updated successfully!",
         type: "success",
       });
+
+      // Redirect to role list after a short delay
+      setTimeout(() => {
+        navigate("/roles/list");
+      }, 1500);
     } catch (err: any) {
       setPopup({
         isVisible: true,
