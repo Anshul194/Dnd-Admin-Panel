@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
 export interface MetaIntegration {
@@ -55,7 +56,8 @@ export const updateSettings = createAsyncThunk<Settings, Partial<Settings>>(
   async (settings, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.put("/settings", settings);
-      return response.data;
+      // Extract the setting object from the response
+      return response.data?.setting || response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
