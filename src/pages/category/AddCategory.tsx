@@ -149,9 +149,13 @@ export default function AddCategory() {
         navigate("/category/list");
       }, 1000);
     } catch (err: any) {
+      const errorMessage =
+        typeof err === 'string' 
+          ? err 
+          : err?.response?.data?.body?.message || err?.response?.data?.message || err?.message || "Failed to create Category. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create Category. Please try again.",
+        message: errorMessage,
         type: "error",
       });
     }

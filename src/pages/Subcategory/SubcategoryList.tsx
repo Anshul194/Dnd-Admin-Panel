@@ -21,27 +21,16 @@ import { Link } from "react-router";
 import {
   deleteSubcategory,
   fetchSubcategories,
+  Subcategory,
 } from "../../store/slices/subCategory";
 import { setSearchQuery } from "../../store/slices/subCategory";
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  status: "active" | "inactive";
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-  subCategoryCount: number;
-}
 
 // Delete Confirmation Modal Component
 const DeleteModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  category: Category | null;
+  category: Subcategory | null;
   isDeleting: boolean;
 }> = ({ isOpen, onClose, onConfirm, category, isDeleting }) => {
   if (!isOpen || !category) return null;
@@ -180,6 +169,8 @@ const SubcategoryList: React.FC = () => {
         limit: pagination.limit,
         search: searchQuery || "",
         filters: activeFilters,
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
@@ -212,6 +203,8 @@ const SubcategoryList: React.FC = () => {
           deletedAt: null,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
@@ -231,7 +224,7 @@ const SubcategoryList: React.FC = () => {
     dispatch(setSearchQuery(""));
   };
 
-  const openEditModal = (category: Category) => {
+  const openEditModal = (category: Subcategory) => {
     setSubcategoryToEdit(category);
     setEditModalOpen(true);
   };
@@ -258,13 +251,14 @@ const SubcategoryList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-
-        search: searchQuery || "", // Changed from searchFields to search
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
 
-  const openDeleteModal = (category: Category) => {
+  const openDeleteModal = (category: Subcategory) => {
     setSubcategoryToDelete(category);
     setDeleteModalOpen(true);
   };
@@ -302,8 +296,9 @@ const SubcategoryList: React.FC = () => {
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-
-            search: searchQuery || "", // Changed from searchFields to search
+            search: searchQuery || "",
+            sortField: "createdAt",
+            sortOrder: "desc",
           })
         );
 

@@ -21,6 +21,8 @@ import {
   deleteCategory,
   fetchCategories,
   setSearchQuery,
+  setFilters,
+  resetFilters,
 } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";

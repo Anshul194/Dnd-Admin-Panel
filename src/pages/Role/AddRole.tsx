@@ -19,11 +19,16 @@ interface ModulePermission {
 export default function AddRole() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const [role, setRole] = useState({
+  const [role, setRole] = useState<{
+    name: string;
+    scope: "global" | "tenant";
+    tenantId: string | null;
+    modulePermissions: ModulePermission[];
+  }>({
     name: "",
     scope: "global",
-    tenantId: null as string | null,
-    modulePermissions: [] as ModulePermission[],
+    tenantId: null,
+    modulePermissions: [],
   });
 
   const [popup, setPopup] = useState({
@@ -35,6 +40,7 @@ export default function AddRole() {
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.role.loading);
   const tenants = useSelector((state: RootState) => state.tenant.tenants);
+  const tenantsLoading = useSelector((state: RootState) => state.tenant.loading);
   const modules = useSelector((state: RootState) => state.modules.modules);
 
   // Available permissions
@@ -47,7 +53,8 @@ export default function AddRole() {
     }
     // Fetch tenants and modules when component mounts
     dispatch(fetchModules());
-    dispatch(fetchTenants());
+    // Fetch all tenants with a high limit to get all tenants
+    dispatch(fetchTenants({ page: 1, limit: 1000 }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -70,7 +77,7 @@ export default function AddRole() {
     if (name === "scope") {
       setRole({
         ...role,
-        [name]: value,
+        scope: value as "global" | "tenant",
         tenantId: value === "global" ? null : role.tenantId,
       });
     } else {
@@ -157,8 +164,10 @@ export default function AddRole() {
     try {
       // Prepare role data
       const roleData = {
-        ...role,
-        tenantId: role.scope === "global" ? null : role.tenantId,
+        name: role.name,
+        scope: role.scope,
+        tenantId: role.scope === "global" ? undefined : (role.tenantId ?? undefined),
+        modulePermissions: role.modulePermissions,
       };
 
       // Create the role
@@ -186,7 +195,7 @@ export default function AddRole() {
         navigate("/roles/list");
       }, 1500);
     } catch (err: any) {
-  
+      const errorMessage =
         typeof err === 'string' 
           ? err 
           : err?.response?.data?.body?.message || err?.response?.data?.message || err?.message || "Failed to create role. Please try again.";
@@ -264,15 +273,35 @@ export default function AddRole() {
                     onChange={handleChange}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     required={role.scope === "tenant"}
-                    disabled={!user?.isSuperAdmin}
+                    disabled={!user?.isSuperAdmin || tenantsLoading}
                   >
-                    <option value="">Select a tenant</option>
-                    {tenants.map((tenant: any) => (
-                      <option key={tenant._id} value={tenant._id}>
-                        {tenant.companyName} ({tenant.subdomain})
-                      </option>
-                    ))}
+                    <option value="">
+                      {tenantsLoading ? "Loading tenants..." : "Select a tenant"}
+                    </option>
+                    {tenants && tenants.length > 0 ? (
+                      tenants.map((tenant: any) => (
+                        <option key={tenant._id} value={tenant._id}>
+                          {tenant.companyName} ({tenant.subdomain})
+                        </option>
+                      ))
+                    ) : (
+                      !tenantsLoading && (
+                        <option value="" disabled>
+                          No tenants available
+                        </option>
+                      )
+                    )}
                   </select>
+                  {tenantsLoading && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Loading tenants...
+                    </p>
+                  )}
+                  {!tenantsLoading && tenants.length === 0 && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                      No tenants found. Please add tenants first.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

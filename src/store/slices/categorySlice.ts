@@ -36,6 +36,7 @@ interface CategoryState {
   error: string | null;
   pagination: Pagination;
   searchQuery: string;
+  filters: Record<string, any>;
 }
 
 const initialState: CategoryState = {
@@ -49,6 +50,7 @@ const initialState: CategoryState = {
     totalPages: 0,
   },
   searchQuery: "",
+  filters: {},
 };
 
 // Create category
@@ -63,7 +65,11 @@ export const createCategory = createAsyncThunk<Category, Partial<Category>>(
       });
       return response.data?.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(
+        err.response?.data?.body?.message || 
+        err.response?.data?.message || 
+        err.message
+      );
     }
   }
 );
@@ -176,6 +182,13 @@ const categorySlice = createSlice({
       if (action.payload.limit !== undefined)
         state.pagination.limit = action.payload.limit;
     },
+    setFilters: (state, action: PayloadAction<Record<string, any>>) => {
+      state.filters = action.payload;
+    },
+    resetFilters: (state) => {
+      state.filters = {};
+      state.searchQuery = "";
+    },
     clearError: (state) => {
       state.error = null;
     },
@@ -188,7 +201,13 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories = action.payload.categories;
+        // Sort categories by createdAt in descending order (newest first)
+        const sortedCategories = [...action.payload.categories].sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        });
+        state.categories = sortedCategories;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
@@ -225,7 +244,7 @@ const categorySlice = createSlice({
   },
 });
 
-export const { setSearchQuery, setPagination, clearError } =
+export const { setSearchQuery, setPagination, setFilters, resetFilters, clearError } =
   categorySlice.actions;
 
 export default categorySlice.reducer;
