@@ -139,16 +139,40 @@ export const fetchEmailTemplateById = createAsyncThunk(
     'emailTemplates/fetchEmailTemplateById',
     async (id: string, { rejectWithValue }) => {
         try {
+            // Validate ID format before making request
+            if (!id || id.trim() === '') {
+                return rejectWithValue('Email template ID is required');
+            }
+
             const response = await axiosInstance.get(`/email-templates/${id}`);
             console?.log("e-template fetched", response.data);
+            
             // Handle the specific API response structure
-            return response.data.emailTemplate || response.data.data || response.data;
+            if (response.data.success === false) {
+                return rejectWithValue(response.data.message || 'Invalid email template ID');
+            }
+            
+            const template = response.data.emailTemplate || response.data.data || response.data;
+            
+            if (!template || !template._id) {
+                return rejectWithValue('Email template not found');
+            }
+            
+            return template;
         } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data?.message ||
-                    error.message ||
-                    'Failed to fetch email template'
-            );
+            const errorMessage = error.response?.data?.message ||
+                error.message ||
+                'Failed to fetch email template';
+            
+            // Provide more specific error messages
+            if (error.response?.status === 400) {
+                return rejectWithValue(error.response?.data?.message || 'Invalid email template ID');
+            }
+            if (error.response?.status === 404) {
+                return rejectWithValue('Email template not found');
+            }
+            
+            return rejectWithValue(errorMessage);
         }
     }
 );

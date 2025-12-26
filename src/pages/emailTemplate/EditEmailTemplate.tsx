@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, Loader2, Bold, Italic, Link, List, AlignLeft, Type, Palette } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, Bold, Italic, Link, List, AlignLeft, Type, Palette, X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import {
     fetchEmailTemplateById,
@@ -203,7 +203,7 @@ const EditEmailTemplate: React.FC = () => {
 
     const breadcrumbItems = [
         { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Email Templates', href: '/emailtemplates/list' },
+        { label: 'Email Templates', href: '/emailtemplate/list' },
         { label: 'Edit Template', href: '#' },
     ];
 
@@ -220,14 +220,25 @@ const EditEmailTemplate: React.FC = () => {
 
     if (error && !currentTemplate) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-red-500 text-lg font-medium mb-4">
-                        {error}
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center max-w-md mx-auto px-4">
+                    <div className="mb-6">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <X className="w-8 h-8 text-red-600" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                            Invalid Email Template
+                        </h2>
+                        <div className="text-red-600 text-sm font-medium mb-2">
+                            {error}
+                        </div>
+                        <p className="text-gray-600 text-sm">
+                            The email template ID "{id}" is invalid or the template may have been deleted.
+                        </p>
                     </div>
                     <button
-                        onClick={() => navigate('/emailtemplates/list')}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                        onClick={() => navigate('/emailtemplate/list')}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                     >
                         Back to Templates
                     </button>
@@ -248,7 +259,7 @@ const EditEmailTemplate: React.FC = () => {
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => navigate('/emailtemplates/list')}
+                                onClick={() => navigate('/emailtemplate/list')}
                                 className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                             >
                                 <ArrowLeft className="w-5 h-5" />
@@ -542,7 +553,7 @@ const EditEmailTemplate: React.FC = () => {
                         <div className="flex justify-end gap-4">
                             <button
                                 type="button"
-                                onClick={() => navigate('/emailtemplates/list')}
+                                onClick={() => navigate('/emailtemplate/list')}
                                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
                             >
                                 Cancel
