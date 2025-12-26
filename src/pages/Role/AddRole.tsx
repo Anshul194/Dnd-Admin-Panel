@@ -41,6 +41,7 @@ export default function AddRole() {
   const loading = useSelector((state: RootState) => state.role.loading);
   const tenants = useSelector((state: RootState) => state.tenant.tenants);
   const tenantsLoading = useSelector((state: RootState) => state.tenant.loading);
+  const tenantsError = useSelector((state: RootState) => state.tenant.error);
   const modules = useSelector((state: RootState) => state.modules.modules);
 
   // Available permissions
@@ -54,7 +55,10 @@ export default function AddRole() {
     // Fetch tenants and modules when component mounts
     dispatch(fetchModules());
     // Fetch all tenants with a high limit to get all tenants
-    dispatch(fetchTenants({ page: 1, limit: 1000 }));
+    // Only fetch if user is super admin (they need to select tenants)
+    dispatch(fetchTenants({ page: 1, limit: 1000 })).catch((err) => {
+      console.error("Error fetching tenants:", err);
+    });
   }, [dispatch]);
 
   useEffect(() => {
@@ -278,7 +282,7 @@ export default function AddRole() {
                     <option value="">
                       {tenantsLoading ? "Loading tenants..." : "Select a tenant"}
                     </option>
-                    {tenants && tenants.length > 0 ? (
+                    {Array.isArray(tenants) && tenants.length > 0 ? (
                       tenants.map((tenant: any) => (
                         <option key={tenant._id} value={tenant._id}>
                           {tenant.companyName} ({tenant.subdomain})
@@ -297,9 +301,11 @@ export default function AddRole() {
                       Loading tenants...
                     </p>
                   )}
-                  {!tenantsLoading && tenants.length === 0 && (
+                  {!tenantsLoading && (!Array.isArray(tenants) || tenants.length === 0) && (
                     <p className="mt-1 text-xs text-red-500 dark:text-red-400">
-                      No tenants found. Please add tenants first.
+                      {tenantsError 
+                        ? `Error loading tenants: ${tenantsError}` 
+                        : "No tenants found. Please add tenants first."}
                     </p>
                   )}
                 </div>

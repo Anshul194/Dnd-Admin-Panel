@@ -99,18 +99,21 @@ const AddAttribute = () => {
         navigate("/attribute/list");
       }, 1000);
     } catch (err: any) {
-      // Show API error message if available
-      const errorMsg = typeof err === 'string' 
-        ? err 
-        : err?.message || 
-          err?.response?.data?.message || 
-          "Failed to create attribute. Please try again.";
+      // When using .unwrap(), the error is the value passed to rejectWithValue
+      // which should already be the extracted error message string
+      const errorMessage =
+        typeof err === 'string' 
+          ? err 
+          : err?.response?.data?.body?.message || 
+            err?.response?.data?.message || 
+            err?.message || 
+            "Failed to create attribute. Please try again.";
       
       console.error("Attribute creation error:", err);
       
       setPopup({
         isVisible: true,
-        message: errorMsg,
+        message: errorMessage,
         type: "error",
       });
     }
