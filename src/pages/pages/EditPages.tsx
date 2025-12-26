@@ -187,31 +187,32 @@ export default function EditPage() {
         updatePage({ id: pageId, data: pageData })
       ).unwrap();
 
-      console.log("Created Page:", createdPage);
+      console.log("Updated Page:", createdPage);
 
       setPopup({
         isVisible: true,
-        message: "Page created successfully!",
+        message: "Page updated successfully!",
         type: "success",
       });
-
-      //   // Reset form
-      //   setPage({
-      //     title: "",
-      //     slug: "",
-      //     content: "",
-      //     metaTitle: "",
-      //     metaDescription: "",
-      //     status: "draft",
-      //     showInFooter: false,
-      //   });
+      
+      // Also show toast notification as backup
+      toast.success("Page updated successfully!");
     } catch (err: any) {
-      console.error("Error creating page:", err);
+      console.error("Error updating page:", err);
+      const errorMessage = 
+        err?.message || 
+        err?.response?.data?.body?.message ||
+        err?.response?.data?.message ||
+        "Failed to update page. Please try again.";
+      
       setPopup({
         isVisible: true,
-        message: err?.message || "Failed to create page. Please try again.",
+        message: errorMessage,
         type: "error",
       });
+      
+      // Also show toast notification as backup
+      toast.error(errorMessage);
     }
   };
 

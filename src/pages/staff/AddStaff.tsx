@@ -30,7 +30,7 @@ export default function AddStaff() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { roles } = useSelector((state: RootState) => state.role);
+  const { roles = [], loading: rolesLoading = false } = useSelector((state: RootState) => state.role || {});
   const [popup, setPopup] = useState({
     isVisible: false,
     message: "",
@@ -124,11 +124,21 @@ export default function AddStaff() {
       return;
     }
 
+    // Ensure role is a valid ID
+    if (!staff.role || staff.role.trim() === '') {
+      toast.error("Please select a valid role.", {
+        duration: 4000,
+        position: "top-right",
+      });
+      return;
+    }
+
     const staffData = {
       name: staff.name.trim(),
       email: staff.email.trim().toLowerCase(),
       password: staff.password,
-      role: staff.role,
+      role: staff.role.trim(), // Ensure it's trimmed
+      roleId: staff.role.trim(), // Also send as roleId in case backend expects it
       isActive: true,
     };
 
@@ -156,13 +166,21 @@ export default function AddStaff() {
         navigate("/staff/list");
       }, 1000);
     } catch (err: any) {
-      const errorMessage =
-        err.message || "Failed to create staff member. Please try again.";
+      console.error("Error creating staff:", err);
+      const errorMessage = 
+        err?.response?.data?.body?.message ||
+        err?.response?.data?.message || 
+        err?.message || 
+        "Failed to create staff member. Please try again.";
+      
       setPopup({
         isVisible: true,
         message: errorMessage,
         type: "error",
       });
+      
+      // Also show toast notification as backup
+      toast.error(errorMessage);
     }
   };
 
@@ -295,11 +313,19 @@ export default function AddStaff() {
                   required
                 >
                   <option value="">Select a role</option>
-                  {roles.map((role) => (
-                    <option key={role.value} value={role._id}>
-                      {role.name} - {role.scope}
-                    </option>
-                  ))}
+                  {rolesLoading ? (
+                    <option value="" disabled>Loading roles...</option>
+                  ) : (
+                    Array.isArray(roles) && roles.length > 0 ? (
+                      roles.map((role) => (
+                        <option key={role._id || role.value} value={role._id}>
+                          {role.name} {role.scope ? `- ${role.scope}` : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>No roles available</option>
+                    )
+                  )}
                 </select>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Select the appropriate role based on the staff member's
