@@ -193,9 +193,11 @@ export default function ViewContact() {
   };
 
   useEffect(() => {
-    getData();
-    markasRead();
-  }, [dispatch]);
+    if (id) {
+      getData();
+      markasRead();
+    }
+  }, [dispatch, id]);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
