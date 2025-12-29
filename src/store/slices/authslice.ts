@@ -36,8 +36,9 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
+    // Use relative path since axiosInstance already has baseURL configured
     const response = await axiosInstance.patch<AuthResponse>(
-      `${API_BASE_URL}/user`,
+      "/api/user",
       {
         email: credentials.email,
         password: credentials.password,
