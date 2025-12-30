@@ -324,10 +324,7 @@ export default function EditShipping() {
         position: "top-right",
       });
 
-      // Redirect to shipping list after successful update
-      setTimeout(() => {
-        navigate("/shipping/list");
-      }, 1000);
+      // Stay on the edit page - no redirect
     } catch (err: any) {
       console.error("Error updating shipping:", err);
       setPopup({

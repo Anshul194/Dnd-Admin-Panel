@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -80,13 +81,15 @@ export default function EditOrder() {
         })
       ).unwrap();
 
-      // window.location.reload();
-
-      setPopup({
-        isVisible: true,
-        message: "Order updated successfully!",
-        type: "success",
+      toast.success("Order updated successfully!", {
+        duration: 3000,
+        position: "top-right",
       });
+
+      // Redirect to orders list after successful update
+      setTimeout(() => {
+        window.location.href = "/orders/list";
+      }, 1000);
     } catch (err: any) {
       setPopup({
         isVisible: true,
@@ -142,13 +145,14 @@ export default function EditOrder() {
 
       // If user hasn't picked a service and it's not one of the auto-pick ones, just show success for the metadata
       if (!serviceCode && !isBluedart && !isDelhivery) {
-        setPopup({
-          isVisible: true,
-          message: "Order updated successfully!",
-          type: "success",
+        toast.success("Order updated successfully!", {
+          duration: 3000,
+          position: "top-right",
         });
-        // Reload after a short delay to reflect metadata changes
-        setTimeout(() => window.location.reload(), 1500);
+        // Redirect to orders list after a short delay
+        setTimeout(() => {
+          window.location.href = "/orders/list";
+        }, 1000);
         return;
       }
 
@@ -166,12 +170,14 @@ export default function EditOrder() {
         );
         console.log("shipping response ===>", response.data);
 
-        setPopup({
-          isVisible: true,
-          message: "Order updated and shipment created successfully!",
-          type: "success",
+        toast.success("Order updated and shipment created successfully!", {
+          duration: 3000,
+          position: "top-right",
         });
-        setTimeout(() => window.location.reload(), 1500);
+        // Redirect to orders list after a short delay
+        setTimeout(() => {
+          window.location.href = "/orders/list";
+        }, 1000);
       } catch (shipError: any) {
         console.error("Error creating shipment:", shipError);
         const errMsg = shipError?.response?.data?.message || "Order updated, but shipment creation failed.";
