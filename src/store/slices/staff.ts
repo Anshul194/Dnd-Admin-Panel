@@ -88,6 +88,11 @@ export const fetchStaff = createAsyncThunk<
           email: search,
         })
       );
+    
+    // Add filters to query params
+    if (filters && Object.keys(filters).length > 0) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
 
     const response = await axiosInstance.get(
       `/staff?${queryParams.toString()}`,
@@ -255,7 +260,10 @@ const staffSlice = createSlice({
         if (index !== -1) state.staff[index] = action.payload;
       })
       .addCase(deleteStaff.fulfilled, (state, action) => {
+        console.log("deleteStaff.fulfilled - payload (id):", action.payload);
+        console.log("deleteStaff.fulfilled - staff before filter:", state.staff.map(s => s._id));
         state.staff = state.staff.filter((s) => s._id !== action.payload);
+        console.log("deleteStaff.fulfilled - staff after filter:", state.staff.map(s => s._id));
       })
       .addCase(fetchStaffById.fulfilled, (state, action) => {
         const index = state.staff.findIndex(
