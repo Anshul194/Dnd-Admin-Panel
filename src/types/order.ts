@@ -61,6 +61,16 @@ export interface OrderDetails {
   updatedAt: {
     $date: string;
   };
+  shippingMethod?: string;
+  shipping_details?: {
+    platform: string | null;
+    reference_number: string | null;
+    tracking_url: string | null;
+    current_status: string | null;
+    labelUrl: string | null;
+    raw_response?: any;
+    status_history?: any[];
+  };
   __v: number;
 }
 
@@ -85,10 +95,10 @@ export const DELIVERY_OPTIONS: DeliveryOption[] = [
     estimatedDays: "2-3 business days",
   },
   {
-    value: "same_day_delivery",
-    label: "Same Day Delivery",
-    description: "Delivered within 24 hours",
-    estimatedDays: "Same day",
+    value: "overnight_delivery",
+    label: "Overnight Delivery",
+    description: "Next day delivery",
+    estimatedDays: "Next day",
   },
 ];
 

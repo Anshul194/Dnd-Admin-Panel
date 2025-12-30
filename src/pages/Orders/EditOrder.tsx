@@ -7,7 +7,7 @@ import { fetchOrderById, updateOrderDelivery } from "../../store/slices/Orders";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import { DELIVERY_OPTIONS, ORDER_STATUS_OPTIONS } from "../../types/order";
 import axiosInstance from "../../services/axiosConfig";
 
@@ -96,7 +96,9 @@ export default function EditOrder() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateInput: any) => {
+    if (!dateInput) return "N/A";
+    const dateStr = typeof dateInput === "object" ? dateInput.$date || dateInput.$oid : dateInput;
     return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -120,36 +122,71 @@ export default function EditOrder() {
   }, [dispatch, orderId]);
 
   const createShipment = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
+      // Step 1: Update order metadata first (Status, delivery option, and shipping method)
+      await dispatch(
+        updateOrderDelivery({
+          id: orderId,
+          deliveryOption: deliveryOption || currentOrder?.deliveryOption || "",
+          status: orderStatus || currentOrder?.status || "",
+          shippingMethod: selectedMethod,
+        })
+      ).unwrap();
 
-      // If courier is BLUEDART or DELHIVERY, pass static values as requested
+      // Step 2: Check if we should attempt to create a shipment
       const upMethod = String(selectedMethod).toUpperCase();
       const isBluedart = upMethod === "BLUEDART";
       const isDelhivery = upMethod === "DELHIVERY";
+      const serviceCode = isBluedart ? "D" : isDelhivery ? "SD1" : selectedService;
 
+      // If user hasn't picked a service and it's not one of the auto-pick ones, just show success for the metadata
+      if (!serviceCode && !isBluedart && !isDelhivery) {
+        setPopup({
+          isVisible: true,
+          message: "Order updated successfully!",
+          type: "success",
+        });
+        // Reload after a short delay to reflect metadata changes
+        setTimeout(() => window.location.reload(), 1500);
+        return;
+      }
+
+      // Step 3: Create shipment using the correct endpoint
       const payload: Record<string, unknown> = {
         orderId: orderId,
-        courier: isBluedart
-          ? "BLUEDART"
-          : isDelhivery
-          ? "DELHIVERY"
-          : selectedMethod,
-        // For Bluedart send 'D', for Delhivery send 'SD1', otherwise use selectedService
-        serviceCode: isBluedart ? "D" : isDelhivery ? "SD1" : selectedService,
+        courier: upMethod,
+        serviceCode: serviceCode,
       };
 
-      const response = await axiosInstance.post(
-        "/orders/shipment/create",
-        payload
-      );
-      console.log("shipping response ===>", response.data);
-      window.location.reload();
+      try {
+        const response = await axiosInstance.post(
+          "/orders/shipment",
+          payload
+        );
+        console.log("shipping response ===>", response.data);
+
+        setPopup({
+          isVisible: true,
+          message: "Order updated and shipment created successfully!",
+          type: "success",
+        });
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (shipError: any) {
+        console.error("Error creating shipment:", shipError);
+        const errMsg = shipError?.response?.data?.message || "Order updated, but shipment creation failed.";
+        setPopup({
+          isVisible: true,
+          message: errMsg,
+          type: "warning",
+        });
+      }
     } catch (error) {
-      console.error("Error creating shipment:", error);
+      console.error("Error updating order:", error);
+      const errMsg = (error as any)?.response?.data?.message || "Failed to update order details. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create shipment.",
+        message: errMsg,
         type: "error",
       });
     }
@@ -167,11 +204,12 @@ export default function EditOrder() {
       setLabelLoading(false);
       window.location.reload();
     } catch (error) {
-      console.error("Error creating shipment:", error);
+      console.error("Error generating label:", error);
       setLabelLoading(false);
+      const errMsg = (error as any)?.response?.data?.message || "Failed to generate label. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create shipment.",
+        message: errMsg,
         type: "error",
       });
     }
@@ -344,6 +382,9 @@ export default function EditOrder() {
     if (currentOrder) {
       setDeliveryOption(currentOrder.deliveryOption);
       setOrderStatus(currentOrder.status);
+      if (currentOrder.shippingMethod) {
+        setSelectedMethod(currentOrder.shippingMethod);
+      }
     }
   }, [currentOrder]);
 
@@ -379,7 +420,7 @@ export default function EditOrder() {
                       Order ID
                     </p>
                     <p className="font-medium text-gray-800 dark:text-white">
-                      {currentOrder?._id}
+                      {typeof currentOrder?._id === "object" ? (currentOrder?._id as any).$oid : currentOrder?._id}
                     </p>
                   </div>
                   <div>
@@ -388,19 +429,18 @@ export default function EditOrder() {
                     </p>
                     <span
                       className={`inline-block px-2 py-1 rounded-full text-xs font-medium capitalize
-                      ${
-                        currentOrder.status === "pending"
+                      ${currentOrder.status === "pending"
                           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                           : currentOrder.status === "confirmed"
-                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                          : currentOrder.status === "processing"
-                          ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                          : currentOrder.status === "shipped"
-                          ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-                          : currentOrder.status === "delivered"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }`}
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                            : currentOrder.status === "processing"
+                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                              : currentOrder.status === "shipped"
+                                ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                                : currentOrder.status === "delivered"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
                     >
                       {currentOrder.status}
                     </span>
@@ -459,7 +499,7 @@ export default function EditOrder() {
                                 rel="noreferrer"
                                 href={
                                   currentOrder?.shipping_details?.platform ===
-                                  "delhivery"
+                                    "delhivery"
                                     ? currentOrder?.shipping_details?.labelUrl
                                     : `${image_url}${currentOrder?.shipping_details?.labelUrl}`
                                 }
@@ -469,8 +509,8 @@ export default function EditOrder() {
                               </a>
                             </div>
                           ) : String(
-                              currentOrder?.shipping_details?.platform
-                            ).toUpperCase() === "BLUEDART" ? (
+                            currentOrder?.shipping_details?.platform
+                          ).toUpperCase() === "BLUEDART" ? (
                             <div className="mt-2 flex items-center gap-3">
                               {currentOrder?.shipping_details?.raw_response
                                 ?.GenerateWayBillResult?.AWBPrintContent ? (
@@ -489,8 +529,8 @@ export default function EditOrder() {
                               )}
                             </div>
                           ) : String(
-                              currentOrder?.shipping_details?.platform
-                            ).toUpperCase() === "DELHIVERY" ? (
+                            currentOrder?.shipping_details?.platform
+                          ).toUpperCase() === "DELHIVERY" ? (
                             <div>
                               {labelLoading ? (
                                 <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
@@ -658,8 +698,8 @@ export default function EditOrder() {
                               el.scrollHeight > el.clientHeight;
                             const atBottom =
                               el.scrollHeight -
-                                el.scrollTop -
-                                el.clientHeight <=
+                              el.scrollTop -
+                              el.clientHeight <=
                               1;
                             if (arrow) {
                               // hide arrow when not scrollable or scrolled to bottom
@@ -780,7 +820,44 @@ export default function EditOrder() {
                   Update Order
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Status Select */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Order Status
+                    </label>
+                    <select
+                      value={orderStatus}
+                      onChange={(e) => setOrderStatus(e.target.value)}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    >
+                      <option value="">Select Status</option>
+                      {ORDER_STATUS_OPTIONS.map((status) => (
+                        <option key={status.value} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Delivery Option
+                    </label>
+                    <select
+                      value={deliveryOption}
+                      onChange={(e) => setDeliveryOption(e.target.value)}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    >
+                      <option value="">Select Option</option>
+                      {DELIVERY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Shipping method
@@ -816,35 +893,35 @@ export default function EditOrder() {
                   {!["BLUEDART", "DELHIVERY"].includes(
                     String(selectedMethod).toUpperCase()
                   ) && (
-                    <div>
-                      <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Select Service
-                      </label>
-                      <select
-                        value={selectedService}
-                        onChange={(e) => setSelectedService(e.target.value)}
-                        className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                      >
-                        {availableServices
-                          .filter((option) => option.courier === selectedMethod)
-                          .map((option) => (
-                            <option key={option.code} value={option.code}>
-                              {option.code} - {option.name}
-                            </option>
-                          ))}
-                      </select>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {
-                          DELIVERY_OPTIONS.find(
-                            (opt) => opt.value === deliveryOption
-                          )?.description
-                        }
-                      </p>
-                    </div>
-                  )}
+                      <div>
+                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Select Service
+                        </label>
+                        <select
+                          value={selectedService}
+                          onChange={(e) => setSelectedService(e.target.value)}
+                          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                        >
+                          {availableServices
+                            .filter((option) => option.courier === selectedMethod)
+                            .map((option) => (
+                              <option key={option.code} value={option.code}>
+                                {option.code} - {option.name}
+                              </option>
+                            ))}
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {
+                            DELIVERY_OPTIONS.find(
+                              (opt) => opt.value === deliveryOption
+                            )?.description
+                          }
+                        </p>
+                      </div>
+                    )}
                 </div>
 
-                {currentOrder.status === "pending" && (
+                {["pending", "confirmed", "processing"].includes(currentOrder.status) && (
                   <div className="mt-6">
                     <button
                       type="submit"
