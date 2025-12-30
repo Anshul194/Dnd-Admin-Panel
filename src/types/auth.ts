@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface User {
   id: string;
   email: string;
@@ -16,11 +17,12 @@ export interface SignupData {
   email: string;
   password: string;
   fullName?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
-  refresh: string;
-  access: string;
+  refresh?: string;
+  access?: string;
   user: User;
   accessToken: string;
   refreshToken: string;

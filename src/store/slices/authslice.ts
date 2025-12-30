@@ -38,7 +38,7 @@ export const login = createAsyncThunk<
   try {
     // Use relative path since axiosInstance already has baseURL configured
     const response = await axiosInstance.patch<AuthResponse>(
-      "/api/user",
+      "/user",
       {
         email: credentials.email,
         password: credentials.password,
@@ -141,15 +141,17 @@ export const signup = createAsyncThunk<
 
 // Logout API call
 
+// Logout API call
+
 export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
   "auth/logout",
-  async (_, { rejectWithValue }) => {
+  async () => {
     try {
       const token =
         localStorage.getItem("accessToken") || localStorage.getItem("token");
 
       if (token) {
-        await fetch(`${API_BASE_URL}api/v1/logout`, {
+        await fetch(`${API_BASE_URL}/v1/logout`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -166,7 +168,7 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
       localStorage.removeItem("user");
 
       window.location.href = "/signin";
-    } catch (error) {
+    } catch (_) {
       localStorage.removeItem("token");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
@@ -198,7 +200,7 @@ export const checkAuthStatus = createAsyncThunk<
 
         // Verify with server
         const response = await axiosInstance.get<ApiResponse<{ user: User }>>(
-          `${API_BASE_URL}api/v1/me`,
+          `/v1/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -234,7 +236,7 @@ export const checkAuthStatus = createAsyncThunk<
     // Fallback to server verification
     try {
       const response = await axios.get<ApiResponse<{ user: User }>>(
-        `${API_BASE_URL}api/v1/me`,
+        `${API_BASE_URL}/v1/me`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -244,7 +246,7 @@ export const checkAuthStatus = createAsyncThunk<
       );
 
       const data = response.data;
-      return { user: data.data?.user!, token };
+      return { user: data.data?.user as User, token };
     } catch (error) {
       localStorage.removeItem("token");
       localStorage.removeItem("accessToken");
@@ -436,7 +438,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loginStatus = "failed";
-        state.error = action.payload || "Login failed";
+        state.error = (action.payload as string) || "Login failed";
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
@@ -458,7 +460,7 @@ const authSlice = createSlice({
       })
       .addCase(signup.rejected, (state, action) => {
         state.signupStatus = "failed";
-        state.error = action.payload || "Signup failed";
+        state.error = (action.payload as string) || "Signup failed";
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
