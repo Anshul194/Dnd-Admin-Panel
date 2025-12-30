@@ -13,7 +13,7 @@ import {
   fetchSubcategoryById,
   updateSubcategory,
 } from "../../store/slices/subCategory";
-import { useParams,useNavigate } from "react-router";
+import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/axiosConfig";
 
 export default function EditSubcategory() {
@@ -186,7 +186,7 @@ export default function EditSubcategory() {
       setTimeout(() => {
         navigate("/subcategory/list");
       }, 1000);
-    
+
       setCategory({
         name: "",
         slug: "",
@@ -203,9 +203,9 @@ export default function EditSubcategory() {
     } catch (err: any) {
       // When using unwrap(), if rejectWithValue was used, err is the rejected value (the message string)
       // Otherwise, it's the error object
-      const errorMessage = 
-        typeof err === 'string' 
-          ? err 
+      const errorMessage =
+        typeof err === 'string'
+          ? err
           : err?.response?.data?.body?.message || err?.response?.data?.message || err?.message || "Failed to update Subcategory. Please try again.";
       setPopup({
         isVisible: true,
@@ -232,8 +232,8 @@ export default function EditSubcategory() {
         slug: data.slug,
         description: data.description || "",
         status: data.status || "Active",
-        parentCategory: typeof data.parentCategory === 'object' && data.parentCategory?._id 
-          ? data.parentCategory._id 
+        parentCategory: typeof data.parentCategory === 'object' && data.parentCategory?._id
+          ? data.parentCategory._id
           : (typeof data.parentCategory === 'string' ? data.parentCategory : null),
         image: typeof data.image === 'string' ? null : (data.image instanceof File ? data.image : null), // Convert string URLs to null, keep File objects
         thumbnail: typeof data.thumbnail === 'string' ? null : (data.thumbnail instanceof File ? data.thumbnail : null), // Convert string URLs to null, keep File objects
@@ -246,9 +246,9 @@ export default function EditSubcategory() {
       console.error("Failed to fetch subcategory:", error);
       // When using unwrap(), if rejectWithValue was used, error is the rejected value (the message string)
       // Otherwise, it's the error object
-      const errorMessage = 
-        typeof error === 'string' 
-          ? error 
+      const errorMessage =
+        typeof error === 'string'
+          ? error
           : error?.response?.data?.body?.message || error?.response?.data?.message || error?.message || "Failed to fetch subcategory. Please try again.";
       setPopup({
         isVisible: true,
@@ -320,46 +320,46 @@ export default function EditSubcategory() {
                   Basic Information
                 </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Parent Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="parentCategory"
-                    value={category.parentCategory || ""}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    required
-                  >
-                    <option value="">Select Parent Category</option>
-                    {/* Map through categories to create options */}
-                    {allCategories?.map((cat: any, index: number) => {
-                      if (cat.status === "Inactive" || cat.deletedAt !== null) {
-                        return null;
-                      }
-                      return (
-                        <option key={cat?._id} value={cat?._id}>
-                          {cat?.name}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Category Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={category.name}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter category name"
-                    required
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Parent Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="parentCategory"
+                      value={category.parentCategory || ""}
+                      onChange={handleChange}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      required
+                    >
+                      <option value="">Select Parent Category</option>
+                      {/* Map through categories to create options */}
+                      {allCategories?.map((cat: any, index: number) => {
+                        if (cat.status === "Inactive" || cat.deletedAt !== null) {
+                          return null;
+                        }
+                        return (
+                          <option key={cat?._id} value={cat?._id}>
+                            {cat?.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Category Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={category.name}
+                      onChange={handleChange}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter category name"
+                      required
+                    />
+                  </div>
 
                   <div>
                     <label className="block mb-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
@@ -428,7 +428,7 @@ export default function EditSubcategory() {
                       Lower numbers appear first
                     </p>
                   </div> */}
-                   <div>
+                  <div>
                     <label className="block mb-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
                       Category Name <span className="text-red-500">*</span>
                     </label>
@@ -581,13 +581,12 @@ export default function EditSubcategory() {
                       Recommended: 50-60 characters
                     </p>
                     <span
-                      className={`text-xs font-semibold ${
-                        category.seoTitle.length > 60
+                      className={`text-xs font-semibold ${category.seoTitle.length > 60
                           ? "text-red-600"
                           : category.seoTitle.length >= 50
-                          ? "text-green-600"
-                          : "text-gray-500"
-                      }`}
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}
                     >
                       {category.seoTitle.length}/60
                     </span>
@@ -595,13 +594,12 @@ export default function EditSubcategory() {
                   {category.seoTitle.length > 0 && (
                     <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
                       <div
-                        className={`h-full transition-all duration-300 ${
-                          category.seoTitle.length > 60
+                        className={`h-full transition-all duration-300 ${category.seoTitle.length > 60
                             ? "bg-red-500"
                             : category.seoTitle.length >= 50
-                            ? "bg-green-500"
-                            : "bg-indigo-500"
-                        }`}
+                              ? "bg-green-500"
+                              : "bg-indigo-500"
+                          }`}
                         style={{
                           width: `${Math.min(
                             (category.seoTitle.length / 60) * 100,
@@ -631,13 +629,12 @@ export default function EditSubcategory() {
                       Recommended: 150-160 characters
                     </p>
                     <span
-                      className={`text-xs font-semibold ${
-                        category.seoDescription.length > 160
+                      className={`text-xs font-semibold ${category.seoDescription.length > 160
                           ? "text-red-600"
                           : category.seoDescription.length >= 150
-                          ? "text-green-600"
-                          : "text-gray-500"
-                      }`}
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}
                     >
                       {category.seoDescription.length}/160
                     </span>
@@ -645,13 +642,12 @@ export default function EditSubcategory() {
                   {category.seoDescription.length > 0 && (
                     <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
                       <div
-                        className={`h-full transition-all duration-300 ${
-                          category.seoDescription.length > 160
+                        className={`h-full transition-all duration-300 ${category.seoDescription.length > 160
                             ? "bg-red-500"
                             : category.seoDescription.length >= 150
-                            ? "bg-green-500"
-                            : "bg-indigo-500"
-                        }`}
+                              ? "bg-green-500"
+                              : "bg-indigo-500"
+                          }`}
                         style={{
                           width: `${Math.min(
                             (category.seoDescription.length / 160) * 100,

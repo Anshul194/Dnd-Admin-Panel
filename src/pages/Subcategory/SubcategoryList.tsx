@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import {
   deleteSubcategory,
   fetchSubcategories,
@@ -521,11 +521,10 @@ const SubcategoryList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
+                className={`px-3 py-1 rounded ${pagination.page === page
                     ? "bg-indigo-500 text-white"
                     : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {page}
               </button>
