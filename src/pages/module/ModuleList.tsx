@@ -88,6 +88,14 @@ const DeleteModal: React.FC<{
               </strong>
               ?
             </p>
+            {(category.status === "active" || category.status === "Active") && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mb-4">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  <strong>Cannot Delete:</strong> This module is currently active.
+                  Please set it to inactive before deleting.
+                </p>
+              </div>
+            )}
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
               This action cannot be undone.
@@ -225,6 +233,17 @@ const ModuleList: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (ModuleToDelete) {
+      // Check if module is active
+      if (ModuleToDelete.status === "active" || ModuleToDelete.status === "Active") {
+        setPopup({
+          message: `Cannot delete active module "${ModuleToDelete.name}". Please set the module to inactive first.`,
+          type: "error",
+          isVisible: true,
+        });
+        closeDeleteModal();
+        return;
+      }
+
       setIsDeleting(true);
       try {
         // Dispatch the delete action
