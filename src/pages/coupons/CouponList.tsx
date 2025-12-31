@@ -82,6 +82,14 @@ const DeleteModal: React.FC<{
               </strong>
               ?
             </p>
+            {coupon.isActive && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mb-4">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  <strong>Cannot Delete:</strong> This coupon is currently active.
+                  Please set it to inactive before deleting.
+                </p>
+              </div>
+            )}
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
               This action cannot be undone.
@@ -216,6 +224,17 @@ const CouponList: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (couponToDelete && couponToDelete._id) {
+      // Check if coupon is active
+      if (couponToDelete.isActive) {
+        setPopup({
+          message: `Cannot delete active coupon "${couponToDelete.code}". Please set the coupon to inactive first.`,
+          type: "error",
+          isVisible: true,
+        });
+        closeDeleteModal();
+        return;
+      }
+
       setIsDeleting(true);
       try {
         // Dispatch the delete action
@@ -450,11 +469,10 @@ const CouponList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(p)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${
-                  page === p
+                className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${page === p
                     ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                }`}
+                  }`}
               >
                 {p}
               </button>
