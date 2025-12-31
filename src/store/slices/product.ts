@@ -117,6 +117,29 @@ export const createProduct = createAsyncThunk<Product, any>(
   }
 );
 
+// Check if product has variants before deletion
+export const checkProductVariants = createAsyncThunk<
+  { hasVariants: boolean; variantCount: number },
+  string
+>("products/checkVariants", async (productId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get(`/variant`, {
+      params: {
+        productId: productId,
+        limit: 1000 // Get all variants for this product
+      }
+    });
+
+    const variants = response.data?.data?.result || [];
+    return {
+      hasVariants: variants.length > 0,
+      variantCount: variants.length
+    };
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data || err.message);
+  }
+});
+
 // Delete product
 export const deleteProduct = createAsyncThunk<string, string>(
   "products/delete",
@@ -158,9 +181,9 @@ export const updateProduct = createAsyncThunk<
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.body?.message ||
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to update product"
+      err.response?.data?.message ||
+      err.message ||
+      "Failed to update product"
     );
   }
 });

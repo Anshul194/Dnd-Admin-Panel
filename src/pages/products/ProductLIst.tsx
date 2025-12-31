@@ -21,7 +21,8 @@ import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 
 import { setSearchQuery } from "../../store/slices/categorySlice";
-import { deleteProduct, fetchProducts } from "../../store/slices/product";
+import { deleteProduct, fetchProducts, checkProductVariants } from "../../store/slices/product";
+import axiosInstance from "../../services/axiosConfig";
 
 interface Category {
   _id: string;
@@ -85,7 +86,7 @@ const DeleteModal: React.FC<{
             </p>
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              This action cannot be undone.
+              This action cannot be undone. All variants must be deleted before you can delete this product.
             </p>
           </div>
 
@@ -237,7 +238,24 @@ const ProductList: React.FC = () => {
     if (subcategoryToDelete) {
       setIsDeleting(true);
       try {
-        // Dispatch the delete action
+        // Check for variants first
+        const variantCheck = await dispatch(
+          checkProductVariants(subcategoryToDelete._id)
+        ).unwrap();
+
+        // Block deletion if variants exist
+        if (variantCheck.hasVariants) {
+          setPopup({
+            message: `Cannot delete product "${subcategoryToDelete.name}". Please delete all ${variantCheck.variantCount} variant${variantCheck.variantCount > 1 ? 's' : ''} first before deleting this product.`,
+            type: "error",
+            isVisible: true,
+          });
+          setIsDeleting(false);
+          closeDeleteModal();
+          return;
+        }
+
+        // Proceed with deletion only if no variants exist
         await dispatch(deleteProduct(subcategoryToDelete._id)).unwrap();
 
         setPopup({
@@ -265,7 +283,6 @@ const ProductList: React.FC = () => {
           })
         );
 
-        // Optional: Show success message
         console.log(
           `Product "${subcategoryToDelete.name}" deleted successfully`
         );
@@ -439,9 +456,8 @@ const ProductList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <img
-                          src={`${import.meta.env.VITE_IMAGE_URL}${
-                            cat?.thumbnail?.url || cat?.images[0]?.url || ""
-                          }`}
+                          src={`${import.meta.env.VITE_IMAGE_URL}${cat?.thumbnail?.url || cat?.images[0]?.url || ""
+                            }`}
                           onError={(e) => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src =
@@ -504,11 +520,10 @@ const ProductList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${
-                  pagination.page === page
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                }`}
+                className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${pagination.page === page
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  }`}
               >
                 {page}
               </button>
