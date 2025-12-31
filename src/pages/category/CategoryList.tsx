@@ -318,10 +318,15 @@ const CategoryList: React.FC = () => {
 
         // Optional: Show success message
         console.log(`Category "${categoryToDelete.name}" deleted successfully`);
-      } catch (error) {
-        console.error("Failed to delete category:", error);
+      } catch (err) {
+        console.error("Failed to delete category:", err);
+        const errorMessage =
+          typeof err === "string"
+            ? err
+            : (err as any)?.message || (err as any)?.response?.data?.message ||
+              "Failed to delete category. Please try again.";
         setPopup({
-          message: "Failed to delete category. Please try again.",
+          message: errorMessage,
           type: "error",
           isVisible: true,
         });
