@@ -14,7 +14,6 @@ const initialCoupon = {
   type: "percent",
   value: 0,
   isActive: true,
-  expiresAt: "",
   startAt: "",
   endAt: "",
   usageLimit: 1,
@@ -136,14 +135,7 @@ const EditCoupon: React.FC = () => {
       });
       return;
     }
-    if (!coupon.expiresAt || !validateDate(coupon.expiresAt)) {
-      setPopup({
-        isVisible: true,
-        message: "Please enter a valid expiry date.",
-        type: "error",
-      });
-      return;
-    }
+
     // Validate start date if provided
     if (coupon.startAt && !validateDate(coupon.startAt)) {
       setPopup({
@@ -173,26 +165,24 @@ const EditCoupon: React.FC = () => {
     // Ensure dates are properly formatted before submission
     const formattedCoupon = {
       ...coupon,
-      expiresAt: formatDateForInput(coupon.expiresAt),
       startAt: coupon.startAt ? formatToDateTimeLocal(coupon.startAt) : "",
       endAt: coupon.endAt ? formatToDateTimeLocal(coupon.endAt) : "",
     };
     try {
       const updatedCoupon = await dispatch(updateCoupon({ id: couponId, data: formattedCoupon })).unwrap();
       console.log("Coupon updated successfully:", updatedCoupon);
-      
+
       setPopup({
         isVisible: true,
         message: "Coupon updated successfully!",
         type: "success",
       });
-      
+
       // Refresh the coupon data to show updated values
       if (updatedCoupon) {
         setCoupon((prev) => ({
           ...prev,
           ...updatedCoupon,
-          expiresAt: formatDateForInput(updatedCoupon.expiresAt),
           startAt: updatedCoupon.startAt ? formatToDateTimeLocal(updatedCoupon.startAt) : "",
           endAt: updatedCoupon.endAt ? formatToDateTimeLocal(updatedCoupon.endAt) : "",
         }));
@@ -260,7 +250,6 @@ const EditCoupon: React.FC = () => {
             isActive: typeof data.isActive === "boolean" ? data.isActive : true,
             startAt: formatToDateTimeLocal(data.startAt),
             endAt: formatToDateTimeLocal(data.endAt),
-            expiresAt: formatDateForInput(data.expiresAt),
             usageLimit: data.usageLimit || 1,
             usedCount: data.usedCount || 0,
             minCartValue: data.minCartValue || 0,
@@ -434,20 +423,6 @@ const EditCoupon: React.FC = () => {
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     placeholder="1"
                     min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Expiry Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="expiresAt"
-                    value={formatDateForInput(coupon.expiresAt)}
-                    onChange={handleChange}
-                    min={new Date().toISOString().split("T")[0]}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    required
                   />
                 </div>
               </div>
