@@ -21,7 +21,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 
 import { setSearchQuery } from "../../store/slices/categorySlice";
-import { deleteProduct, fetchProducts, checkProductVariants } from "../../store/slices/product";
+import { deleteProduct, fetchProducts } from "../../store/slices/product";
 import axiosInstance from "../../services/axiosConfig";
 
 interface Category {
@@ -238,24 +238,7 @@ const ProductList: React.FC = () => {
     if (subcategoryToDelete) {
       setIsDeleting(true);
       try {
-        // Check for variants first
-        const variantCheck = await dispatch(
-          checkProductVariants(subcategoryToDelete._id)
-        ).unwrap();
-
-        // Block deletion if variants exist
-        if (variantCheck.hasVariants) {
-          setPopup({
-            message: `Cannot delete product "${subcategoryToDelete.name}". Please delete all ${variantCheck.variantCount} variant${variantCheck.variantCount > 1 ? 's' : ''} first before deleting this product.`,
-            type: "error",
-            isVisible: true,
-          });
-          setIsDeleting(false);
-          closeDeleteModal();
-          return;
-        }
-
-        // Proceed with deletion only if no variants exist
+        // Directly delete the product (no variant check)
         await dispatch(deleteProduct(subcategoryToDelete._id)).unwrap();
 
         setPopup({
@@ -266,7 +249,6 @@ const ProductList: React.FC = () => {
 
         // Close modal and reset state
         closeDeleteModal();
-
         // Refresh the categories list
         const activeFilters = {
           deletedAt: null,
@@ -286,10 +268,16 @@ const ProductList: React.FC = () => {
         console.log(
           `Product "${subcategoryToDelete.name}" deleted successfully`
         );
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to delete product:", error);
+        const serverMessage =
+          error?.message ||
+          error?.data?.message ||
+          error?.payload?.message ||
+          (typeof error === "string" ? error : null);
+
         setPopup({
-          message: "Failed to delete product. Please try again.",
+          message: serverMessage || "Failed to delete product. Please try again.",
           type: "error",
           isVisible: true,
         });
