@@ -65,9 +65,23 @@ export const createBlog = createAsyncThunk<Blog, Partial<Blog>>(
           "Content-Type": "multipart/form-data",
         },
       });
-      return response.data?.data;
+      // Handle different response structures
+      const blogData = 
+        response.data?.data?.body?.blog ||
+        response.data?.data?.body?.data ||
+        response.data?.data?.blog ||
+        response.data?.data ||
+        response.data?.blog ||
+        response.data?.body ||
+        response.data;
+      return blogData;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      const errorMessage = 
+        err.response?.data?.body?.message ||
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to create blog";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -115,10 +129,56 @@ export const fetchBlogById = createAsyncThunk<Blog, string>(
   "blogs/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/blog/${id}`);
-      return response.data?.data;
+      if (!id) {
+        return rejectWithValue("Blog id is required");
+      }
+      
+      // Try both path parameter and query parameter formats
+      let response;
+      try {
+        // First try path parameter format: /blog/{id}
+        response = await axiosInstance.get(`/blog/${id}`);
+      } catch (pathErr: any) {
+        // If that fails, try query parameter format: /blog?id={id}
+        if (pathErr.response?.status === 400 || pathErr.response?.status === 404) {
+          response = await axiosInstance.get(`/blog?id=${id}`);
+        } else {
+          throw pathErr;
+        }
+      }
+      
+      // Handle different response structures (for production vs development)
+      const data = 
+        response.data?.data?.body?.blog ||
+        response.data?.data?.body?.data ||
+        response.data?.data?.blog ||
+        response.data?.data ||
+        response.data?.body?.blog ||
+        response.data?.body?.data ||
+        response.data?.blog ||
+        response.data?.body ||
+        response.data;
+      
+      if (!data) {
+        console.warn("Unexpected blog response structure:", response.data);
+        return rejectWithValue("Invalid response from server");
+      }
+      
+      return data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      console.error("Error fetching blog by ID:", {
+        blogId: id,
+        error: err,
+        response: err.response?.data,
+        message: err.message,
+        status: err.response?.status
+      });
+      return rejectWithValue(
+        err.response?.data?.body?.message ||
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to fetch blog"
+      );
     }
   }
 );
@@ -134,9 +194,28 @@ export const updateBlog = createAsyncThunk<
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data?.data;
+    // Handle different response structures
+    const blogData = 
+      response.data?.data?.body?.blog ||
+      response.data?.data?.body?.data ||
+      response.data?.data?.blog ||
+      response.data?.data ||
+      response.data?.blog ||
+      response.data?.body ||
+      response.data;
+    return blogData;
   } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
+    console.error("Update blog error:", {
+      error: err,
+      response: err.response?.data,
+      message: err.message
+    });
+    const errorMessage = 
+      err.response?.data?.body?.message ||
+      err.response?.data?.message || 
+      err.message || 
+      "Failed to update blog";
+    return rejectWithValue(errorMessage);
   }
 });
 

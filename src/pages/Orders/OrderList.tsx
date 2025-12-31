@@ -14,9 +14,8 @@ import {
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
-import { Link } from "react-router";
+import { useSearchParams, Link } from "react-router-dom";
 import { fetchOrders, setSearchQuery } from "../../store/slices/Orders";
-import { useSearchParams } from "react-router-dom";
 
 const OrderList: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -45,7 +44,7 @@ const OrderList: React.FC = () => {
   // Single useEffect to handle all data fetching
   useEffect(() => {
     const status = searchParams.get('status') || "";
-    
+
     // Update status filter if it changed
     if (status !== statusFilter) {
       setStatusFilter(status);
@@ -54,7 +53,7 @@ const OrderList: React.FC = () => {
     // Only fetch on initial load or when dependencies actually change
     if (initialLoadRef.current || status !== statusFilter) {
       initialLoadRef.current = false;
-      
+
       dispatch(
         fetchOrders({
           page: pagination.page,
@@ -219,8 +218,10 @@ const OrderList: React.FC = () => {
     return pages;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateInput: any) => {
+    if (!dateInput) return "N/A";
+    const dateStr = typeof dateInput === "object" ? dateInput.$date || dateInput.$oid : dateInput;
+    return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -280,7 +281,7 @@ const OrderList: React.FC = () => {
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-gray-500 text-sm dark:text-gray-400">
-              Total: {pagination.totalDocuments ?? pagination.total}
+              Total: {String(typeof pagination.totalDocuments === 'object' ? (pagination.totalDocuments as any)?.$numberInt || 0 : (pagination.totalDocuments ?? pagination.total ?? 0))}
             </span>
             {/* Upload CSV Button */}
             <button
@@ -403,30 +404,30 @@ const OrderList: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {orders.map((order, idx) => (
                 <tr
-                  key={order._id}
+                  key={order?._id && typeof order._id === "object" ? (order._id as any).$oid : (order?._id || idx)}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {(pagination.page - 1) * pagination.limit + idx + 1}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {order._id}
+                    {order?._id && typeof order._id === "object" ? (order._id as any).$oid : (order?._id || "N/A")}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {order.items?.length || 0} items
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    ₹{order?.totalAmount?.toFixed(2) || "0.00"}
+                    ₹{(Number(order?.totalAmount || order?.total || 0)).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center">
-                      {getStatusIcon(order.status)}
+                      {getStatusIcon(order?.status || "pending")}
                       <span
                         className={`ml-1 capitalize ${getStatusColor(
-                          order.status
+                          order?.status || "pending"
                         )}`}
                       >
-                        {order.status}
+                        {order?.status || "pending"}
                       </span>
                     </div>
                   </td>
@@ -434,7 +435,7 @@ const OrderList: React.FC = () => {
                     {formatDate(order.createdAt)}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/orders/${order._id}`}>
+                    <Link to={`/orders/${order?._id && typeof order._id === "object" ? (order._id as any).$oid : order?._id || ""}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors p-1">
                         <Eye className="h-5 w-5" />
                       </button>
@@ -472,7 +473,7 @@ const OrderList: React.FC = () => {
                 className={`px-3 py-1 rounded ${pagination.page === page
                   ? "bg-indigo-500 text-white"
                   : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {page}
               </button>

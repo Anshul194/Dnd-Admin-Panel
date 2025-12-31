@@ -11,9 +11,10 @@ import {
   fetchShippingById,
   updateShipping,
 } from "../../store/slices/shippingSlice";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 
 export default function EditShipping() {
+  const navigate = useNavigate();
   const [shipping, setShipping] = useState({
     name: "",
     slug: "",
@@ -312,79 +313,24 @@ export default function EditShipping() {
     };
 
     try {
-      const createdShipping = await dispatch(
+      const updatedShipping = await dispatch(
         updateShipping({ id, data: shippingData })
       ).unwrap();
 
-      console.log("Created Shipping:", createdShipping);
+      console.log("Updated Shipping:", updatedShipping);
 
-      setPopup({
-        isVisible: true,
-        message: "Shipping method created successfully!",
-        type: "success",
+      toast.success("Shipping method updated successfully!", {
+        duration: 3000,
+        position: "top-right",
       });
 
-      // Reset form
-      setShipping({
-        name: "",
-        slug: "",
-        description: "",
-        shippingMethod: "standard",
-        cost: 0,
-        freeShippingThreshold: "",
-        estimatedDeliveryDays: {
-          min: 1,
-          max: 7,
-        },
-        supportedRegions: [
-          {
-            country: "",
-            states: [""],
-            postalCodes: [""],
-          },
-        ],
-        weightLimit: {
-          min: 0,
-          max: 0,
-        },
-        dimensionsLimit: {
-          length: 0,
-          width: 0,
-          height: 0,
-        },
-        carrier: "Blue Dart",
-        trackingAvailable: true,
-        trackingNumber: "",
-        cod: {
-          available: false,
-          fee: 0,
-        },
-        additionalCharges: {
-          fuelSurcharge: 0,
-          remoteAreaSurcharge: 0,
-          oversizedSurcharge: 0,
-          dangerousGoodsSurcharge: 0,
-        },
-        customs: {
-          clearanceRequired: false,
-          documentation: [""],
-        },
-        proofOfDelivery: {
-          available: false,
-          details: {
-            consigneeName: "",
-            deliveryDate: "",
-            signature: "",
-          },
-        },
-        status: "active",
-      });
+      // Stay on the edit page - no redirect
     } catch (err: any) {
-      console.error("Error creating shipping:", err);
+      console.error("Error updating shipping:", err);
       setPopup({
         isVisible: true,
         message:
-          err?.message || "Failed to create shipping method. Please try again.",
+          err?.message || "Failed to update shipping method. Please try again.",
         type: "error",
       });
     }

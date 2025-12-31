@@ -21,6 +21,8 @@ import {
   deleteCategory,
   fetchCategories,
   setSearchQuery,
+  setFilters,
+  resetFilters,
 } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -87,6 +89,14 @@ const DeleteModal: React.FC<{
               </strong>
               ?
             </p>
+            {(category.status === "active" || category.status === "Active") && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mb-4">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  <strong>Cannot Delete:</strong> This category is currently active.
+                  Please set it to inactive before deleting.
+                </p>
+              </div>
+            )}
             {category.subCategoryCount > 0 && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
@@ -283,6 +293,17 @@ const CategoryList: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (categoryToDelete) {
+      // Check if category is active
+      if (categoryToDelete.status === "active" || categoryToDelete.status === "Active") {
+        setPopup({
+          message: `Cannot delete active category "${categoryToDelete.name}". Please set the category to inactive first.`,
+          type: "error",
+          isVisible: true,
+        });
+        closeDeleteModal();
+        return;
+      }
+
       setIsDeleting(true);
       try {
         // Dispatch the delete action
@@ -361,7 +382,7 @@ const CategoryList: React.FC = () => {
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -z-10"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10"></div>
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
@@ -533,7 +554,7 @@ const CategoryList: React.FC = () => {
                               <Pencil className="h-4 w-4" />
                             </button>
                           </Link>
-                          <button 
+                          <button
                             onClick={() => openDeleteModal(cat)}
                             className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-all shadow-sm hover:shadow-md"
                           >
@@ -601,7 +622,7 @@ const CategoryList: React.FC = () => {
                         Edit
                       </button>
                     </Link>
-                    <button 
+                    <button
                       onClick={() => openDeleteModal(cat)}
                       className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-all"
                     >
@@ -634,11 +655,10 @@ const CategoryList: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handlePageChange(page)}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${
-                    pagination.page === page
+                  className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${pagination.page === page
                       ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
                       : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>

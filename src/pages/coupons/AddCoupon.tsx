@@ -13,7 +13,6 @@ const initialCoupon = {
   type: "percent",
   value: 0,
   isActive: true,
-  expiresAt: "",
   startAt: "",
   endAt: "",
   usageLimit: 1,
@@ -166,15 +165,11 @@ const AddCoupon: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coupon.code ) {
+    if (!coupon.code) {
       setPopup({ isVisible: true, message: "Coupon code is required.", type: "error" });
       return;
     }
-    // Validate expiry date
-    if (!coupon.expiresAt || !validateDate(coupon.expiresAt)) {
-      setPopup({ isVisible: true, message: "Please enter a valid expiry date.", type: "error" });
-      return;
-    }
+
     // Validate start date if provided
     if (coupon.startAt && !validateDate(coupon.startAt)) {
       setPopup({ isVisible: true, message: "Please enter a valid start date.", type: "error" });
@@ -188,17 +183,16 @@ const AddCoupon: React.FC = () => {
     // Ensure dates are properly formatted before submission
     const formattedCoupon = {
       ...coupon,
-      expiresAt: formatDateForInput(coupon.expiresAt),
       startAt: coupon.startAt ? formatDateTimeForInput(coupon.startAt) : "",
       endAt: coupon.endAt ? formatDateTimeForInput(coupon.endAt) : "",
     };
     try {
       const createdCoupon = await dispatch(createCoupon(formattedCoupon)).unwrap();
       console.log("Created coupon:", createdCoupon);
-      
+
       setPopup({ isVisible: true, message: "Coupon created successfully!", type: "success" });
       setCoupon(initialCoupon);
-      
+
       // Redirect immediately - the coupon is already in Redux state
       // The list page will fetch fresh data when it mounts
       setTimeout(() => {
@@ -206,10 +200,10 @@ const AddCoupon: React.FC = () => {
       }, 1000);
     } catch (error: any) {
       console.error("Error creating coupon:", error);
-      setPopup({ 
-        isVisible: true, 
-        message: error?.message || "Failed to create coupon.", 
-        type: "error" 
+      setPopup({
+        isVisible: true,
+        message: error?.message || "Failed to create coupon.",
+        type: "error"
       });
     }
   };
@@ -532,19 +526,6 @@ const AddCoupon: React.FC = () => {
                     onChange={handleChange}
                     className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3.5 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
                     min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-3 text-sm font-semibold">
-                    Expiry Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="expiresAt"
-                    value={coupon.expiresAt}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3.5 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
-                    
                   />
                 </div>
               </div>

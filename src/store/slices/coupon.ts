@@ -20,12 +20,14 @@ interface CouponState {
   loading: boolean;
   error: string | null;
   coupons: Coupon[];
+  selectedCoupon: Coupon | null;
 }
 
 const initialState: CouponState = {
   loading: false,
   error: null,
   coupons: [],
+  selectedCoupon: null,
 };
 
 export const createCoupon = createAsyncThunk<
@@ -223,6 +225,19 @@ const couponSlice = createSlice({
         const idx = state.coupons.findIndex((c) => c._id === action.payload._id);
         if (idx !== -1)
           state.coupons[idx] = { ...state.coupons[idx], ...action.payload };
+      })
+      .addCase(getCouponById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCouponById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedCoupon = action.payload;
+      })
+      .addCase(getCouponById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Unknown error";
+        state.selectedCoupon = null;
       });
   },
 });

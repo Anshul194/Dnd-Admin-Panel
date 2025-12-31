@@ -19,7 +19,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
-import { deleteStaff, fetchStaff } from "../../store/slices/staff";
+import { deleteStaff, fetchStaff, setSearchQuery, setPagination } from "../../store/slices/staff";
 import axiosInstance from "../../services/axiosConfig";
 
 interface Category {
@@ -123,7 +123,7 @@ const DeleteModal: React.FC<{
 
 const StaffList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { staff, loading, error, pagination, searchQuery, filters } =
+  const { staff, loading, error, pagination, searchQuery } =
     useAppSelector((state) => state.staff);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -210,13 +210,13 @@ const StaffList: React.FC = () => {
   const handleFilterChange = (key: string, value: string) => {
     const updated = { ...localFilters, [key]: value };
     setLocalFilters(updated);
-    dispatch(setFilters(updated));
+    // Filters are applied directly via localFilters state in the useEffect
   };
 
   const handleResetFilters = () => {
     setSearchInput("");
     setLocalFilters({});
-    dispatch(resetFilters());
+    // Reset will trigger the useEffect to refetch with empty filters
   };
 
   const openEditModal = (category: Category) => {
@@ -267,7 +267,7 @@ const StaffList: React.FC = () => {
     if (categoryToDelete) {
       setIsDeleting(true);
       try {
-        // Dispatch the delete action
+        // Dispatch the delete action - this will update Redux state via deleteStaff.fulfilled
         await dispatch(deleteStaff(categoryToDelete._id)).unwrap();
 
         setPopup({
@@ -279,23 +279,9 @@ const StaffList: React.FC = () => {
         // Close modal and reset state
         closeDeleteModal();
 
-        // Refresh the categories list
-        const activeFilters = {
-          isDeleted: false,
-          ...(localFilters.status ? { status: localFilters.status } : {}),
-        };
+        // The staff is already removed from Redux state by deleteStaff.fulfilled reducer
+        // No need to re-fetch immediately - this prevents race conditions
 
-        dispatch(
-          fetchStaff({
-            page: pagination.page,
-            limit: pagination.limit,
-            filters: activeFilters,
-            search: searchInput !== "" ? searchInput : undefined,
-            sort: { createdAt: "desc" },
-          })
-        );
-
-        // Optional: Show success message
         console.log(`Staff "${categoryToDelete.name}" deleted successfully`);
       } catch (error) {
         console.error("Failed to delete staff:", error);
@@ -314,6 +300,10 @@ const StaffList: React.FC = () => {
       setIvrLoading(true);
       const response = await axiosInstance.get("/ivr/fetch-users");
       console.log("Fetched IVR User successfully", response);
+      const activeFilters = {
+        isDeleted: false,
+        ...(localFilters.status ? { status: localFilters.status } : {}),
+      };
       dispatch(
         fetchStaff({
           page: pagination.page,
@@ -529,11 +519,10 @@ const StaffList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                className={`px-3 py-1 rounded ${pagination.page === page
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
               >
                 {page}
               </button>

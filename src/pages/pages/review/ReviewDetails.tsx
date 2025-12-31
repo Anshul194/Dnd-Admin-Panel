@@ -20,13 +20,13 @@ const ReviewDetails: React.FC = () => {
       <div className="text-lg font-medium text-gray-600 dark:text-gray-300">Loading review data...</div>
     </div>
   );
-  
+
   if (error) return (
     <div className="flex items-center justify-center h-64">
       <div className="text-lg font-semibold text-red-600 dark:text-red-400">{error}</div>
     </div>
   );
-  
+
   if (!selectedReview) return (
     <div className="flex items-center justify-center h-64">
       <div className="text-lg font-medium text-gray-600 dark:text-gray-300">No review found.</div>
@@ -84,28 +84,34 @@ const ReviewDetails: React.FC = () => {
             </h2>
           </div>
           <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/30 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center gap-8">
-              {product?.thumbnail?.url && (
-                <div className="flex-shrink-0">
-                  <div className="relative">
-                    <img
-                      src={`${ImageUrl}/${product.thumbnail.url}`}
-                      alt={product.thumbnail.alt || "Product"}
-                      className="w-32 h-32 object-cover rounded-2xl shadow-lg"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+            {product && typeof product === 'object' ? (
+              <div className="flex items-center gap-8">
+                {product.thumbnail?.url && (
+                  <div className="flex-shrink-0">
+                    <div className="relative">
+                      <img
+                        src={`${ImageUrl}/${product.thumbnail.url}`}
+                        alt={product.thumbnail.alt || "Product"}
+                        className="w-32 h-32 object-cover rounded-2xl shadow-lg"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                    </div>
                   </div>
+                )}
+                <div className="flex-grow space-y-4">
+                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                    {product.name || "Unknown Product"}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                    {product.description || "No description available."}
+                  </p>
                 </div>
-              )}
-              <div className="flex-grow space-y-4">
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-                  {product?.name}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {product?.description}
-                </p>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-4 text-red-500">
+                <span className="text-xl font-bold">This product has been deleted.</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -159,7 +165,7 @@ const ReviewDetails: React.FC = () => {
               Review Information
             </h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
             <div className="space-y-3">
               <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -180,7 +186,7 @@ const ReviewDetails: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
@@ -192,7 +198,7 @@ const ReviewDetails: React.FC = () => {
                 </span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Likes Received
@@ -204,7 +210,7 @@ const ReviewDetails: React.FC = () => {
                 </span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Date Created
@@ -225,7 +231,7 @@ const ReviewDetails: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Review Comment
@@ -248,7 +254,7 @@ const ReviewDetails: React.FC = () => {
               Review Images
             </h2>
           </div>
-          
+
           {review.images && review.images.length > 0 ? (
             <div className="space-y-6">
               <p className="text-gray-600 dark:text-gray-400">
@@ -258,9 +264,9 @@ const ReviewDetails: React.FC = () => {
                 {review.images.map((img, i) => (
                   <div key={i} className="group relative">
                     <div className="relative overflow-hidden rounded-2xl shadow-lg">
-                      <img 
-                        src={`${ImageUrl}/${img}`} 
-                        alt={`Review image ${i + 1}`} 
+                      <img
+                        src={`${ImageUrl}/${img}`}
+                        alt={`Review image ${i + 1}`}
                         className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

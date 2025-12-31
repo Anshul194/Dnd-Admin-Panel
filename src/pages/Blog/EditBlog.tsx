@@ -159,17 +159,29 @@ export default function EditBlog() {
         message: "Blog updated successfully!",
         type: "success",
       });
+      
+      // Also show toast notification as backup
+      toast.success("Blog updated successfully!");
 
       // Redirect to blog list page after successful update
       setTimeout(() => {
         navigate("/blog/list");
       }, 1000);
     } catch (err: any) {
+      const errorMessage = 
+        err?.message || 
+        err?.response?.data?.body?.message ||
+        err?.response?.data?.message ||
+        "Failed to update blog. Please try again.";
+      
       setPopup({
         isVisible: true,
-        message: err?.message || "Failed to update blog. Please try again.",
+        message: errorMessage,
         type: "error",
       });
+      
+      // Also show toast notification as backup
+      toast.error(errorMessage);
     }
   };
 
@@ -181,31 +193,62 @@ export default function EditBlog() {
   };
 
   const getData = async () => {
+    if (!blogId) {
+      setPopup({
+        isVisible: true,
+        message: "Blog ID is missing from URL.",
+        type: "error",
+      });
+      return;
+    }
+    
     try {
       const response = await dispatch(fetchBlogById(blogId)).unwrap();
       console.log("Fetched Blog Data:", response);
+      
+      // Handle different response structures
+      const data = 
+        response?.blog ||
+        response?.data?.blog ||
+        response?.data ||
+        response;
 
-      setBlog({
-        title: response?.title,
-        slug: response?.slug,
-        content: response?.content,
-        author: response?.author,
-        tags: response?.tags,
-        thumbnail: response?.thumbnail?.url,
-        thumbnailAlt: response?.thumbnail?.alt,
-      });
-      const images = response?.images?.map((img: any) => ({
-        file: img?.url,
-        alt: img?.alt,
-      }));
-      setImages(images);
-    } catch (error) {
+      if (data && (data._id || data.title)) {
+        setBlog({
+          title: data?.title || "",
+          slug: data?.slug || "",
+          content: data?.content || "",
+          author: data?.author || "",
+          tags: Array.isArray(data?.tags) ? data.tags : [],
+          thumbnail: data?.thumbnail?.url || data?.thumbnail || null,
+          thumbnailAlt: data?.thumbnail?.alt || "",
+        });
+        
+        const blogImages = data?.images?.map((img: any) => ({
+          file: img?.url || img,
+          alt: img?.alt || "",
+        })) || [];
+        setImages(blogImages);
+      } else {
+        setPopup({
+          isVisible: true,
+          message: "Invalid blog data received from server.",
+          type: "error",
+        });
+      }
+    } catch (error: any) {
       console.error("Error fetching blog data:", error);
+      const errorMessage = 
+        error?.message || 
+        error?.response?.data?.body?.message ||
+        error?.response?.data?.message ||
+        "Failed to fetch blog data. Please check if the blog ID is valid.";
       setPopup({
         isVisible: true,
-        message: "Failed to fetch blog data.",
+        message: errorMessage,
         type: "error",
       });
+      toast.error(errorMessage);
     }
   };
 
@@ -467,7 +510,12 @@ export default function EditBlog() {
           message={popup.message}
           type={popup.type}
           isVisible={popup.isVisible}
-          onClose={() => setPopup({ ...popup, isVisible: false })}
+          onClose={() => {
+            setPopup({ ...popup, isVisible: false });
+            if (popup.type === "success") {
+              navigate("/blog/list");
+            }
+          }}
         />
       </div>
     </div>

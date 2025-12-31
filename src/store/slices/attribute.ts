@@ -107,10 +107,11 @@ export const createAttribute = createAsyncThunk<Attribute, Partial<Attribute>>(
       // Return the data from response (could be response.data.data or response.data)
       return response.data.data || response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.body?.message ||
-                          err.message || 
-                          "Failed to create attribute. Please try again.";
+      const errorMessage = 
+        err.response?.data?.body?.message || 
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to create attribute. Please try again.";
       return rejectWithValue(errorMessage);
     }
   }

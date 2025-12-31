@@ -182,10 +182,14 @@ export default function AddSubcategory() {
       setTimeout(() => {
         navigate("/subcategory/list");
       }, 1000);
-    } catch {
+    } catch (err: any) {
+      const errorMessage =
+        typeof err === 'string' 
+          ? err 
+          : err?.response?.data?.body?.message || err?.response?.data?.message || err?.message || "Failed to create Subcategory. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create Subcategory. Please try again.",
+        message: errorMessage,
         type: "error",
       });
     }

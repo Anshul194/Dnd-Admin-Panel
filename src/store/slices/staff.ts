@@ -88,6 +88,11 @@ export const fetchStaff = createAsyncThunk<
           email: search,
         })
       );
+    
+    // Add filters to query params
+    if (filters && Object.keys(filters).length > 0) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
 
     const response = await axiosInstance.get(
       `/staff?${queryParams.toString()}`,
@@ -137,14 +142,34 @@ export const createStaff = createAsyncThunk<Staff, Partial<Staff>>(
   "staff/create",
   async (data, { rejectWithValue }) => {
     try {
+      console.log("Creating staff with data:", data);
       const response = await axiosInstance.post("/staff", data, {
         headers: {
           "x-tenant": getTenantFromURL(),
         },
       });
-      return response.data?.data;
+      // Handle different response structures
+      const staffData = 
+        response.data?.data?.body?.staff ||
+        response.data?.data?.body?.data ||
+        response.data?.data?.staff ||
+        response.data?.data ||
+        response.data?.body ||
+        response.data;
+      return staffData;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      console.error("Create staff error:", {
+        error: err,
+        response: err.response?.data,
+        message: err.message,
+        status: err.response?.status
+      });
+      const errorMessage = 
+        err.response?.data?.body?.message ||
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to create staff member";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -235,7 +260,10 @@ const staffSlice = createSlice({
         if (index !== -1) state.staff[index] = action.payload;
       })
       .addCase(deleteStaff.fulfilled, (state, action) => {
+        console.log("deleteStaff.fulfilled - payload (id):", action.payload);
+        console.log("deleteStaff.fulfilled - staff before filter:", state.staff.map(s => s._id));
         state.staff = state.staff.filter((s) => s._id !== action.payload);
+        console.log("deleteStaff.fulfilled - staff after filter:", state.staff.map(s => s._id));
       })
       .addCase(fetchStaffById.fulfilled, (state, action) => {
         const index = state.staff.findIndex(

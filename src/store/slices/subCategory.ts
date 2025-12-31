@@ -70,7 +70,11 @@ export const createSubcategory = createAsyncThunk<
     });
     return response.data?.data;
   } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
+    return rejectWithValue(
+      err.response?.data?.body?.message || 
+      err.response?.data?.message || 
+      err.message
+    );
   }
 });
 
@@ -203,7 +207,13 @@ const subcategorySlice = createSlice({
       })
       .addCase(fetchSubcategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.subcategories = action.payload.subcategories;
+        // Sort subcategories by createdAt in descending order (newest first)
+        const sortedSubcategories = [...action.payload.subcategories].sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        });
+        state.subcategories = sortedSubcategories;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchSubcategories.rejected, (state, action) => {

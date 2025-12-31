@@ -18,6 +18,7 @@ interface Order {
   customerName?: string;
   customerEmail?: string;
   items: OrderItem[];
+  total?: number;
   totalAmount: number;
   status:
   | "pending"
@@ -32,6 +33,8 @@ interface Order {
   billingAddress?: Address;
   createdAt: string;
   updatedAt: string;
+  shippingMethod?: string;
+  deliveryOption?: string;
 }
 
 interface OrderItem {
@@ -186,26 +189,20 @@ export const updateOrder = createAsyncThunk<
 // Update order delivery option
 export const updateOrderDelivery = createAsyncThunk<
   OrderDetails,
-  { id: string; deliveryOption: string; status?: string }
->(
-  "orders/updateDelivery",
-  async ({ id, deliveryOption, status }, { rejectWithValue }) => {
-    try {
-      const updateData: Record<string, string> = { deliveryOption };
-      if (status) updateData.status = status;
-
-      const response = await axiosInstance.put(`/orders/${id}`, updateData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data?.data || response.data?.body?.data;
-    } catch (err: unknown) {
-      const error = err as ApiError;
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
+  { id: string; [key: string]: any }
+>("orders/updateDelivery", async ({ id, ...updateData }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(`/orders/${id}`, updateData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data?.data || response.data?.body?.data;
+  } catch (err: unknown) {
+    const error = err as ApiError;
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
 // Update payment status
 export const updatePaymentStatus = createAsyncThunk<

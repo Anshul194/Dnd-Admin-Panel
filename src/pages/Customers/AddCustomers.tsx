@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
 import { createCustomer } from "../../store/slices/customersSlice";
@@ -12,7 +13,7 @@ const AddCustomer = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.customers.loading);
-  const { roles, loading: rolesLoading } = useSelector((state: RootState) => state.role);
+  const { roles = [], loading: rolesLoading = false } = useSelector((state: RootState) => state.role || {});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -169,11 +170,15 @@ const AddCustomer = () => {
               {rolesLoading ? (
                 <option value="" disabled>Loading roles...</option>
               ) : (
-                roles.map((role) => (
-                  <option key={role._id} value={role._id}>
-                    {role.name}
-                  </option>
-                ))
+                Array.isArray(roles) && roles.length > 0 ? (
+                  roles.map((role) => (
+                    <option key={role._id} value={role._id}>
+                      {role.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No roles available</option>
+                )
               )}
             </select>
           </div>

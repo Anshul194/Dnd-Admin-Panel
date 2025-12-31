@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
@@ -36,6 +37,7 @@ export default function AddBlog() {
   });
 
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const loading = useSelector((state: RootState) => state.blog.loading);
 
   const handleChange = (
@@ -153,24 +155,29 @@ export default function AddBlog() {
         message: "Blog created successfully!",
         type: "success",
       });
+      
+      // Also show toast notification as backup
+      toast.success("Blog created successfully!");
 
-      // Reset form
-      setBlog({
-        title: "",
-        content: "",
-        author: "",
-        tags: [],
-        thumbnail: null,
-        thumbnailAlt: "",
-      });
-      setImages([]);
-      setCurrentTag("");
+      // Redirect to blog list page after successful creation
+      setTimeout(() => {
+        navigate("/blog/list");
+      }, 1000);
     } catch (err: any) {
+      const errorMessage = 
+        err?.message || 
+        err?.response?.data?.body?.message ||
+        err?.response?.data?.message ||
+        "Failed to create blog. Please try again.";
+      
       setPopup({
         isVisible: true,
-        message: "Failed to create blog. Please try again.",
+        message: errorMessage,
         type: "error",
       });
+      
+      // Also show toast notification as backup
+      toast.error(errorMessage);
     }
   };
 
@@ -430,7 +437,12 @@ export default function AddBlog() {
           message={popup.message}
           type={popup.type}
           isVisible={popup.isVisible}
-          onClose={() => setPopup({ ...popup, isVisible: false })}
+          onClose={() => {
+            setPopup({ ...popup, isVisible: false });
+            if (popup.type === "success") {
+              navigate("/blog/list");
+            }
+          }}
         />
       </div>
     </div>

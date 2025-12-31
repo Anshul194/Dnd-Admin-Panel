@@ -37,6 +37,8 @@ export default function EditCategory() {
   const categoryId = params.id || "";
   const navigate = useNavigate();
 
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+
   const [popup, setPopup] = useState({
     isVisible: false,
     message: "",
@@ -69,15 +71,21 @@ export default function EditCategory() {
     } else if (type === "number") {
       setCategory({ ...category, [name]: parseInt(value) || 0 });
     } else {
-      setCategory({ ...category, [name]: value });
+      // If user is editing the slug field directly, mark it as manually edited
+      if (name === "slug") {
+        setIsSlugManuallyEdited(true);
+        setCategory({ ...category, [name]: value });
+      } else {
+        setCategory({ ...category, [name]: value });
 
-      // Auto-generate slug when name changes
-      if (name === "name" && value && !category.slug) {
-        setCategory((prev) => ({
-          ...prev,
-          name: value,
-          slug: generateSlug(value),
-        }));
+        // Auto-generate slug when name changes, but ONLY if slug is empty AND not manually edited
+        if (name === "name" && value && !isSlugManuallyEdited && !category.slug) {
+          setCategory((prev) => ({
+            ...prev,
+            name: value,
+            slug: generateSlug(value),
+          }));
+        }
       }
     }
   };
@@ -410,8 +418,8 @@ export default function EditCategory() {
                               category.image instanceof File
                                 ? URL.createObjectURL(category.image)
                                 : typeof category.image === "string"
-                                ? `${import.meta.env.VITE_IMAGE_URL}/${category?.image}`
-                                : undefined
+                                  ? `${import.meta.env.VITE_IMAGE_URL}/${category?.image}`
+                                  : undefined
                             }
                             alt="Category Preview"
                             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
@@ -445,8 +453,8 @@ export default function EditCategory() {
                               category.thumbnail instanceof File
                                 ? URL.createObjectURL(category.thumbnail)
                                 : typeof category.thumbnail === "string"
-                                ? `${import.meta.env.VITE_IMAGE_URL}/${category?.thumbnail}`
-                                : undefined
+                                  ? `${import.meta.env.VITE_IMAGE_URL}/${category?.thumbnail}`
+                                  : undefined
                             }
                             alt="Thumbnail Preview"
                             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
@@ -487,22 +495,20 @@ export default function EditCategory() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Recommended: 50-60 characters
                     </p>
-                    <span className={`text-xs font-semibold ${
-                      category.seoTitle.length > 60 ? 'text-red-600' : 
-                      category.seoTitle.length >= 50 ? 'text-green-600' : 
-                      'text-gray-500'
-                    }`}>
+                    <span className={`text-xs font-semibold ${category.seoTitle.length > 60 ? 'text-red-600' :
+                      category.seoTitle.length >= 50 ? 'text-green-600' :
+                        'text-gray-500'
+                      }`}>
                       {category.seoTitle.length}/60
                     </span>
                   </div>
                   {category.seoTitle.length > 0 && (
                     <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
-                      <div 
-                        className={`h-full transition-all duration-300 ${
-                          category.seoTitle.length > 60 ? 'bg-red-500' : 
-                          category.seoTitle.length >= 50 ? 'bg-green-500' : 
-                          'bg-indigo-500'
-                        }`}
+                      <div
+                        className={`h-full transition-all duration-300 ${category.seoTitle.length > 60 ? 'bg-red-500' :
+                          category.seoTitle.length >= 50 ? 'bg-green-500' :
+                            'bg-indigo-500'
+                          }`}
                         style={{ width: `${Math.min((category.seoTitle.length / 60) * 100, 100)}%` }}
                       />
                     </div>
@@ -526,22 +532,20 @@ export default function EditCategory() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Recommended: 150-160 characters
                     </p>
-                    <span className={`text-xs font-semibold ${
-                      category.seoDescription.length > 160 ? 'text-red-600' : 
-                      category.seoDescription.length >= 150 ? 'text-green-600' : 
-                      'text-gray-500'
-                    }`}>
+                    <span className={`text-xs font-semibold ${category.seoDescription.length > 160 ? 'text-red-600' :
+                      category.seoDescription.length >= 150 ? 'text-green-600' :
+                        'text-gray-500'
+                      }`}>
                       {category.seoDescription.length}/160
                     </span>
                   </div>
                   {category.seoDescription.length > 0 && (
                     <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
-                      <div 
-                        className={`h-full transition-all duration-300 ${
-                          category.seoDescription.length > 160 ? 'bg-red-500' : 
-                          category.seoDescription.length >= 150 ? 'bg-green-500' : 
-                          'bg-indigo-500'
-                        }`}
+                      <div
+                        className={`h-full transition-all duration-300 ${category.seoDescription.length > 160 ? 'bg-red-500' :
+                          category.seoDescription.length >= 150 ? 'bg-green-500' :
+                            'bg-indigo-500'
+                          }`}
                         style={{ width: `${Math.min((category.seoDescription.length / 160) * 100, 100)}%` }}
                       />
                     </div>

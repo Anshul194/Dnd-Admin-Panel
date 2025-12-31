@@ -110,7 +110,9 @@ function Analytics() {
     },
     {
       title: "Total Payment Gateway Charges",
-      value: `₹${sales.totalPaymentGatewayCharges?.toLocaleString("en-IN") ?? 0}`,
+      value: `₹${
+        sales.totalPaymentGatewayCharges?.toLocaleString("en-IN") ?? 0
+      }`,
       description: "Total charges incurred from payment gateways.",
     },
 
@@ -209,21 +211,21 @@ function Analytics() {
   // Prepare data for Orders Radar Chart
   const ordersRadarData = ops.ordersByStatus
     ? Object.entries(ops.ordersByStatus || {}).map(([status, count]) => ({
-      status: status.charAt(0).toUpperCase() + status.slice(1),
-      value: count,
-    }))
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        value: count,
+      }))
     : [];
 
   // Prepare data for Tickets Radar Chart
   const ticketsRadarData = ops.ticketsByStatus
     ? Object.entries(ops.ticketsByStatus || {}).map(([status, count]) => ({
-      status: status
-        .replace("_", " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" "),
-      value: count,
-    }))
+        status: status
+          .replace("_", " ")
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "),
+        value: count,
+      }))
     : [];
 
   // Helper function to determine redirect URL based on card title
@@ -323,13 +325,13 @@ function Analytics() {
             <Link
               key={card.title}
               to={getRedirectUrl(card.title)}
-              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none block"
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none block overflow-hidden"
             >
               <div>
                 <p className="text-gray-500 text-sm font-medium dark:text-gray-300">
                   {card.title}
                 </p>
-                <p className="text-3xl font-bold text-gray-900 mt-2 dark:text-gray-100">
+                <p className="text-3xl font-bold text-gray-900 mt-2 dark:text-gray-100 break-words">
                   {card.value}
                 </p>
                 <p className="text-xs text-gray-400 mt-2 dark:text-gray-400">
@@ -493,16 +495,17 @@ function Analytics() {
                   </td>
                   <td className="py-4 px-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${order.status === "pending"
-                        ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-                        : order.status === "paid"
+                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                        order.status === "pending"
+                          ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                          : order.status === "paid"
                           ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                           : order.status === "shipped"
-                            ? "bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                            : order.status === "completed"
-                              ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
-                              : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-300"
-                        }`}
+                          ? "bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                          : order.status === "completed"
+                          ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
+                          : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-300"
+                      }`}
                     >
                       {order.status}
                     </span>
@@ -573,26 +576,28 @@ function Analytics() {
                   </td>
                   <td className="py-4 px-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${ticket?.priority === "low"
-                        ? "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                        : ticket?.priority === "medium"
+                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                        ticket?.priority === "low"
+                          ? "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          : ticket?.priority === "medium"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                           : "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
-                        }`}
+                      }`}
                     >
                       {ticket?.priority}
                     </span>
                   </td>
                   <td className="py-4 px-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${ticket.status === "open"
-                        ? "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
-                        : ticket?.status === "in_progress"
+                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                        ticket.status === "open"
+                          ? "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
+                          : ticket?.status === "in_progress"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                           : ticket?.status === "resolved"
-                            ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
-                            : "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                        }`}
+                          ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
+                          : "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                      }`}
                     >
                       {ticket?.status?.replace("_", " ")}
                     </span>
