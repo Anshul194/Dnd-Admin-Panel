@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChartNoAxesCombined,
+  Percent,
 } from "lucide-react";
 
 const fieldGroups = [
@@ -148,6 +149,26 @@ const fieldGroups = [
       },
     ],
   },
+  {
+    title: "Charges",
+    icon: <Percent className="w-5 h-5" />,
+    fields: [
+      {
+        name: "gstCharge",
+        label: "GST Charge",
+        type: "number",
+        description: "GST charge amount applied to orders",
+        unit: "₹",
+      },
+      {
+        name: "paymentGatewayCharge",
+        label: "Payment Gateway Charge",
+        type: "number",
+        description: "Payment gateway charge amount applied to orders",
+        unit: "₹",
+      },
+    ],
+  },
 ];
 
 const SettingsList: React.FC = () => {
@@ -209,8 +230,8 @@ const SettingsList: React.FC = () => {
           type === "checkbox"
             ? checked
             : type === "number"
-            ? Number(value)
-            : value,
+              ? Number(value)
+              : value,
       }));
     }
   };
@@ -238,6 +259,9 @@ const SettingsList: React.FC = () => {
           break;
         case 4:
           successMessage = "Meta Integration settings updated successfully!";
+          break;
+        case 5:
+          successMessage = "Charges settings updated successfully!";
           break;
         default:
           successMessage = "Settings updated successfully!";
@@ -288,10 +312,9 @@ const SettingsList: React.FC = () => {
         {toast.type && (
           <div
             className={`fixed top-6 right-6 px-6 py-4 rounded-lg shadow-2xl z-[9999] flex items-center gap-3 min-w-80 max-w-md
-              ${
-                toast.type === "success"
-                  ? "bg-green-50 border-l-4 border-green-500 text-green-800"
-                  : "bg-red-50 border-l-4 border-red-500 text-red-800"
+              ${toast.type === "success"
+                ? "bg-green-50 border-l-4 border-green-500 text-green-800"
+                : "bg-red-50 border-l-4 border-red-500 text-red-800"
               }`}
             style={{
               animation: "slideInRight 0.3s ease-out",
@@ -336,11 +359,10 @@ const SettingsList: React.FC = () => {
               <button
                 key={index}
                 onClick={() => setActiveTab(index)}
-                className={`flex items-center gap-2 px-4 py-3 font-medium rounded-t-lg transition-all duration-200 ${
-                  activeTab === index
-                    ? "bg-white text-blue-600 border-b-2 border-blue-600 -mb-px"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
+                className={`flex items-center gap-2 px-4 py-3 font-medium rounded-t-lg transition-all duration-200 ${activeTab === index
+                  ? "bg-white text-blue-600 border-b-2 border-blue-600 -mb-px"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }`}
               >
                 {group.icon}
                 <span className="hidden sm:inline">{group.title}</span>
@@ -371,6 +393,8 @@ const SettingsList: React.FC = () => {
                         "Control order frequency and restrictions"}
                       {activeTab === 4 &&
                         "Configure Meta (Facebook) advertising integration"}
+                      {activeTab === 5 &&
+                        "Configure GST and payment gateway charges for orders"}
                     </p>
                   </div>
                 </div>

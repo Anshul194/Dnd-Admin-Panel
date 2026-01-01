@@ -34,24 +34,26 @@ export interface OrderDetails {
   };
   items: OrderItem[];
   total: number;
+  gstCharge?: number;
+  paymentGatewayCharge?: number;
   coupon?: {
     $oid: string;
   };
   discount?: number;
   status:
-    | "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled";
+  | "pending"
+  | "confirmed"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
   shippingAddress: OrderAddress;
   billingAddress: OrderAddress;
   paymentDetails: PaymentDetails;
   deliveryOption:
-    | "standard_delivery"
-    | "express_delivery"
-    | "same_day_delivery";
+  | "standard_delivery"
+  | "express_delivery"
+  | "same_day_delivery";
   placedAt: {
     $date: string;
   };

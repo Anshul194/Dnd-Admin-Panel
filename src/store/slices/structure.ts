@@ -23,6 +23,8 @@ export interface Settings {
   codDisableForHighRTO: boolean;
   codBlockOnRTOAddress: boolean;
   highRTOOrderCount: number;
+  gstCharge: number;
+  paymentGatewayCharge: number;
   metaIntegration?: MetaIntegration;
 }
 

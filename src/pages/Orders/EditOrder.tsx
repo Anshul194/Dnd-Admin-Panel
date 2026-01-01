@@ -672,6 +672,26 @@ export default function EditOrder() {
                         </span>
                       </div>
                     )}
+                    {(currentOrder.gstCharge ?? 0) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          GST Charge:
+                        </span>
+                        <span className="text-gray-800 dark:text-white">
+                          ₹{(currentOrder.gstCharge ?? 0).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {(currentOrder.paymentGatewayCharge ?? 0) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Payment Gateway Charge:
+                        </span>
+                        <span className="text-gray-800 dark:text-white">
+                          ₹{(currentOrder.paymentGatewayCharge ?? 0).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-semibold text-lg">
                       <span className="text-gray-800 dark:text-white">
                         Total:
