@@ -8,7 +8,8 @@ interface Coupon {
   type: string;
   value: number;
   isActive: boolean;
-  expiresAt: string;
+  expiresAt?: string;
+  endAt?: string; // Backend might return endAt instead of expiresAt
   usageLimit: number;
   usedCount: number;
   minCartValue: number;

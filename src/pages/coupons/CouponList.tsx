@@ -27,7 +27,8 @@ interface Coupon {
   type: string;
   value: number;
   isActive: boolean;
-  expiresAt: string;
+  expiresAt?: string;
+  endAt?: string; // Backend might return endAt instead of expiresAt
   usageLimit: number;
   usedCount: number;
   minCartValue: number;
@@ -127,6 +128,55 @@ const DeleteModal: React.FC<{
       </div>
     </div>
   );
+};
+
+// Helper function to format expiry date safely
+const formatExpiryDate = (coupon: Coupon): string => {
+  // Backend uses endAt (not expiresAt)
+  const expiryDate = coupon.endAt || coupon.expiresAt;
+  
+  // Check for null, undefined, empty string, or string "null"/"undefined"
+  if (!expiryDate || 
+      expiryDate === '' || 
+      expiryDate === null || 
+      expiryDate === undefined ||
+      String(expiryDate).trim() === '' ||
+      String(expiryDate).toLowerCase() === 'null' ||
+      String(expiryDate).toLowerCase() === 'undefined' ||
+      String(expiryDate).toLowerCase() === 'invalid date') {
+    return "No expiry";
+  }
+  
+  try {
+    // Convert to string first to check for "Invalid Date" string
+    const dateStr = String(expiryDate);
+    if (dateStr.toLowerCase() === 'invalid date' || dateStr === 'NaN') {
+      return "No expiry";
+    }
+    
+    const date = new Date(expiryDate);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime()) || date.toString() === 'Invalid Date') {
+      return "No expiry";
+    }
+    
+    // Format the date as MM/DD/YYYY
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const formatted = `${month}/${day}/${year}`;
+    
+    // Final safety check - ensure the formatted result is valid
+    if (!formatted || formatted === 'Invalid Date' || formatted.toLowerCase().includes('invalid')) {
+      return "No expiry";
+    }
+    
+    return formatted;
+  } catch (error) {
+    // If any error occurs, return "No expiry"
+    return "No expiry";
+  }
 };
 
 const CouponList: React.FC = () => {
@@ -423,7 +473,7 @@ const CouponList: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(coupon.expiresAt).toLocaleDateString()}
+                        {formatExpiryDate(coupon)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                         {coupon.usageLimit}
