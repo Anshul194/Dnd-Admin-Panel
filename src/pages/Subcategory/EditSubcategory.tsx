@@ -30,6 +30,9 @@ export default function EditSubcategory() {
     sortOrder: 0,
     isFeatured: false,
   });
+
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+
   const params = useParams();
   const subcategoryId = params.id || "";
   const navigate = useNavigate();
@@ -103,13 +106,18 @@ export default function EditSubcategory() {
     } else {
       setCategory({ ...category, [name]: value });
 
-      // Auto-generate slug when name changes
-      if (name === "name" && value && !category.slug) {
+      // Auto-generate slug when name changes, but ONLY if not manually edited
+      if (name === "name" && value && !isSlugManuallyEdited) {
         setCategory((prev) => ({
           ...prev,
           name: value,
           slug: generateSlug(value),
         }));
+      }
+
+      // If user manually edits slug, stop auto-generation
+      if (name === "slug") {
+        setIsSlugManuallyEdited(true);
       }
     }
   };
@@ -242,6 +250,13 @@ export default function EditSubcategory() {
         sortOrder: data.sortOrder || 0,
         isFeatured: data.isFeatured || false,
       });
+
+      // Since we are loading existing data, we consider it "manually edited" 
+      // if the user starts changing the name later, but actually for Edit 
+      // we usually want it to stay as is unless they change the name.
+      // However, if they change the name, we should auto-generate UNLESS 
+      // they manually change the slug.
+      // So we keep isSlugManuallyEdited false initially.
     } catch (error: any) {
       console.error("Failed to fetch subcategory:", error);
       // When using unwrap(), if rejectWithValue was used, error is the rejected value (the message string)
@@ -582,10 +597,10 @@ export default function EditSubcategory() {
                     </p>
                     <span
                       className={`text-xs font-semibold ${category.seoTitle.length > 60
-                          ? "text-red-600"
-                          : category.seoTitle.length >= 50
-                            ? "text-green-600"
-                            : "text-gray-500"
+                        ? "text-red-600"
+                        : category.seoTitle.length >= 50
+                          ? "text-green-600"
+                          : "text-gray-500"
                         }`}
                     >
                       {category.seoTitle.length}/60
@@ -595,10 +610,10 @@ export default function EditSubcategory() {
                     <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
                       <div
                         className={`h-full transition-all duration-300 ${category.seoTitle.length > 60
-                            ? "bg-red-500"
-                            : category.seoTitle.length >= 50
-                              ? "bg-green-500"
-                              : "bg-indigo-500"
+                          ? "bg-red-500"
+                          : category.seoTitle.length >= 50
+                            ? "bg-green-500"
+                            : "bg-indigo-500"
                           }`}
                         style={{
                           width: `${Math.min(
@@ -630,10 +645,10 @@ export default function EditSubcategory() {
                     </p>
                     <span
                       className={`text-xs font-semibold ${category.seoDescription.length > 160
-                          ? "text-red-600"
-                          : category.seoDescription.length >= 150
-                            ? "text-green-600"
-                            : "text-gray-500"
+                        ? "text-red-600"
+                        : category.seoDescription.length >= 150
+                          ? "text-green-600"
+                          : "text-gray-500"
                         }`}
                     >
                       {category.seoDescription.length}/160
@@ -643,10 +658,10 @@ export default function EditSubcategory() {
                     <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
                       <div
                         className={`h-full transition-all duration-300 ${category.seoDescription.length > 160
-                            ? "bg-red-500"
-                            : category.seoDescription.length >= 150
-                              ? "bg-green-500"
-                              : "bg-indigo-500"
+                          ? "bg-red-500"
+                          : category.seoDescription.length >= 150
+                            ? "bg-green-500"
+                            : "bg-indigo-500"
                           }`}
                         style={{
                           width: `${Math.min(

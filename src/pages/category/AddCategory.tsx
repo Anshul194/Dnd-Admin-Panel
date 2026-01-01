@@ -31,8 +31,6 @@ export default function AddCategory() {
     disableCOD: false,       // Added
   });
 
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
-
   const [popup, setPopup] = useState({
     isVisible: false,
     message: "",
@@ -41,16 +39,6 @@ export default function AddCategory() {
 
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.category.loading);
-
-  // Auto-generate slug from name
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -61,33 +49,18 @@ export default function AddCategory() {
 
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
-      setCategory({ ...category, [name]: checked });
+      setCategory((prev) => ({ ...prev, [name]: checked }));
     } else if (type === "number") {
-      setCategory({ ...category, [name]: parseInt(value) || 0 });
+      setCategory((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
     } else {
-      // If user is editing the slug field directly, mark it as manually edited
-      if (name === "slug") {
-        setIsSlugManuallyEdited(true);
-        setCategory({ ...category, [name]: value });
-      } else {
-        setCategory({ ...category, [name]: value });
-
-        // Auto-generate slug when name changes, but ONLY if slug is empty AND not manually edited
-        if (name === "name" && value && !isSlugManuallyEdited && !category.slug) {
-          setCategory((prev) => ({
-            ...prev,
-            name: value,
-            slug: generateSlug(value),
-          }));
-        }
-      }
+      setCategory((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name } = e.target;
     if (e.target.files && e.target.files[0]) {
-      setCategory({ ...category, [name]: e.target.files[0] });
+      setCategory((prev) => ({ ...prev, [name]: e.target.files[0] }));
     }
   };
 
@@ -248,8 +221,7 @@ export default function AddCategory() {
                       required
                     />
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      URL-friendly version of the name. Auto-generated from name
-                      if left empty.
+                      URL-friendly version of the name
                     </p>
                   </div>
                 </div>

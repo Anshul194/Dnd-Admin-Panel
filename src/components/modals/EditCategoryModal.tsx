@@ -70,6 +70,8 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     slug: "",
     status: "active" as "active" | "inactive",
   });
+  const [isCategorySlugManuallyEdited, setIsCategorySlugManuallyEdited] =
+    useState(false);
 
   const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [categoryImagePreview, setCategoryImagePreview] = useState<
@@ -84,6 +86,8 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     slug: "",
     status: "active" as "active" | "inactive",
   });
+  const [isNewSubCategorySlugManuallyEdited, setIsNewSubCategorySlugManuallyEdited] =
+    useState(false);
   const [editingSubCategory, setEditingSubCategory] = useState<string | null>(
     null
   );
@@ -92,6 +96,8 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     slug: "",
     status: "active" as "active" | "inactive",
   });
+  const [isEditSubCategorySlugManuallyEdited, setIsEditSubCategorySlugManuallyEdited] =
+    useState(false);
 
   // Delete confirmation state
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -190,13 +196,16 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
   const resetForm = () => {
     setCategoryData(null);
     setCategoryForm({ name: "", slug: "", status: "active" });
+    setIsCategorySlugManuallyEdited(false);
     setCategoryImage(null);
     setCategoryImagePreview(null);
     setSubCategories([]);
     setShowAddSubCategory(false);
     setNewSubCategory({ name: "", slug: "", status: "active" });
+    setIsNewSubCategorySlugManuallyEdited(false);
     setEditingSubCategory(null);
     setEditSubCategoryForm({ name: "", slug: "", status: "active" });
+    setIsEditSubCategorySlugManuallyEdited(false);
     setDeleteConfirmation({
       isOpen: false,
       subCategoryId: null,
@@ -215,24 +224,39 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     setCategoryForm((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === "name" && { slug: generateSlug(value) }),
+      ...(field === "name" &&
+        !isCategorySlugManuallyEdited && { slug: generateSlug(value) }),
     }));
+
+    if (field === "slug") {
+      setIsCategorySlugManuallyEdited(true);
+    }
   };
 
   const handleSubCategoryInputChange = (field: string, value: string) => {
     setNewSubCategory((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === "name" && { slug: generateSlug(value) }),
+      ...(field === "name" &&
+        !isNewSubCategorySlugManuallyEdited && { slug: generateSlug(value) }),
     }));
+
+    if (field === "slug") {
+      setIsNewSubCategorySlugManuallyEdited(true);
+    }
   };
 
   const handleEditSubCategoryInputChange = (field: string, value: string) => {
     setEditSubCategoryForm((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === "name" && { slug: generateSlug(value) }),
+      ...(field === "name" &&
+        !isEditSubCategorySlugManuallyEdited && { slug: generateSlug(value) }),
     }));
+
+    if (field === "slug") {
+      setIsEditSubCategorySlugManuallyEdited(true);
+    }
   };
 
   const handleUpdateCategory = async () => {
@@ -341,9 +365,9 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
         prev.map((sub) =>
           sub._id === editingSubCategory
             ? {
-                ...result,
-                status: result.status === "active" ? "active" : "inactive",
-              }
+              ...result,
+              status: result.status === "active" ? "active" : "inactive",
+            }
             : sub
         )
       );
@@ -367,11 +391,13 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
       slug: subCategory.slug,
       status: subCategory.status,
     });
+    setIsEditSubCategorySlugManuallyEdited(false);
   };
 
   const cancelEditingSubCategory = () => {
     setEditingSubCategory(null);
     setEditSubCategoryForm({ name: "", slug: "", status: "active" });
+    setIsEditSubCategorySlugManuallyEdited(false);
   };
 
   const openDeleteConfirmation = (subCategory: SubCategory) => {
