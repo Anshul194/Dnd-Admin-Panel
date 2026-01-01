@@ -12,7 +12,7 @@ import {
   fetchPageById,
   updatePage,
 } from "../../store/slices/pages";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router-dom";
 
 function formatTimeRange(range?: string): [string, string] {
   if (!range || typeof range !== "string") return ["", ""];
@@ -71,6 +71,7 @@ export default function EditPage() {
   });
 
   const params = useParams();
+  const navigate = useNavigate();
   const pageId = params.id || "";
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -175,7 +176,7 @@ export default function EditPage() {
           thuFri: `${contactUsData.contactHours.thuFriAM}am - ${contactUsData.contactHours.thuFriPM}pm`,
           sat:
             contactUsData.contactHours.satAM !== "" &&
-            contactUsData.contactHours.satPM !== ""
+              contactUsData.contactHours.satPM !== ""
               ? `${contactUsData.contactHours.satAM}am - ${contactUsData.contactHours.satPM}pm`
               : "Closed",
         },
@@ -194,23 +195,28 @@ export default function EditPage() {
         message: "Page updated successfully!",
         type: "success",
       });
-      
+
       // Also show toast notification as backup
       toast.success("Page updated successfully!");
+
+      // Redirect to pages list after successful update
+      setTimeout(() => {
+        navigate("/pages/list");
+      }, 1000);
     } catch (err: any) {
       console.error("Error updating page:", err);
-      const errorMessage = 
-        err?.message || 
+      const errorMessage =
+        err?.message ||
         err?.response?.data?.body?.message ||
         err?.response?.data?.message ||
         "Failed to update page. Please try again.";
-      
+
       setPopup({
         isVisible: true,
         message: errorMessage,
         type: "error",
       });
-      
+
       // Also show toast notification as backup
       toast.error(errorMessage);
     }

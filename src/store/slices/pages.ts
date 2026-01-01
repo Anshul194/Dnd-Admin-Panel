@@ -36,6 +36,7 @@ interface PageState {
   error: string | null;
   pagination: Pagination;
   searchQuery: string;
+  filters: Record<string, any>;
 }
 
 const initialState: PageState = {
@@ -49,6 +50,7 @@ const initialState: PageState = {
     totalPages: 0,
   },
   searchQuery: "",
+  filters: {},
 };
 
 // Async Thunks
@@ -60,17 +62,17 @@ export const createPage = createAsyncThunk<Page, Partial<Page>>(
     try {
       const response = await axiosInstance.post("/page", data);
       // Handle different response structures
-      const page = 
+      const page =
         response.data?.data?.page ||
         response.data?.data ||
         response.data?.page ||
         response.data;
-      
+
       // Ensure createdAt is set
       if (page && !page.createdAt) {
         page.createdAt = new Date().toISOString();
       }
-      
+
       return page;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -177,6 +179,13 @@ const pageSlice = createSlice({
       if (action.payload.limit !== undefined)
         state.pagination.limit = action.payload.limit;
     },
+    setFilters: (state, action: PayloadAction<Record<string, any>>) => {
+      state.filters = action.payload;
+    },
+    resetFilters: (state) => {
+      state.filters = {};
+      state.searchQuery = "";
+    },
     clearError: (state) => {
       state.error = null;
     },
@@ -258,6 +267,6 @@ const pageSlice = createSlice({
   },
 });
 
-export const { setSearchQuery, setPagination, clearError } = pageSlice.actions;
+export const { setSearchQuery, setPagination, setFilters, resetFilters, clearError } = pageSlice.actions;
 
 export default pageSlice.reducer;
