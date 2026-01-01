@@ -64,7 +64,14 @@ export const createTenant = createAsyncThunk<Tenant, Partial<Tenant>>(
   async (data, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post("/tenant", data);
-      return response.data?.data;
+
+      // Handle nested structures
+      const responseData = response.data?.data?.body?.data ||
+        response.data?.body?.data ||
+        response.data?.data ||
+        response.data;
+
+      return responseData;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -99,62 +106,42 @@ export const fetchTenants = createAsyncThunk<
     const response = await axiosInstance.get(
       `/tenant?${queryParams.toString()}`
     );
-    
-    // Handle different response structures (for production vs development)
-    // Try multiple possible response structures
+
+    // Handle highly nested response structures from the backend
+    // Common pattern: response.data.data.body.data
+    const apiData = response.data?.data?.body?.data ||
+      response.data?.body?.data ||
+      response.data?.data ||
+      response.data;
+
     let tenants: Tenant[] = [];
-    let paginationData: Partial<Pagination> = {};
-    
-    // Structure 1: response.data.data.body.data (nested structure)
-    if (response.data?.data?.body?.data) {
-      const data = response.data.data.body.data;
-      tenants = (data?.result || data?.tenants || data?.data || []) as Tenant[];
-      paginationData = {
-        total: data?.totalDocuments || data?.total || 0,
-        page: data?.currentPage || data?.page || page,
-        limit: data?.limit || limit,
-        totalPages: data?.totalPages || 0,
-      };
+
+    if (apiData) {
+      tenants = (apiData.result || apiData.tenants || apiData.data || (Array.isArray(apiData) ? apiData : [])) as Tenant[];
     }
-    // Structure 2: response.data.data (direct data)
-    else if (response.data?.data) {
-      const data = response.data.data;
-      tenants = (data?.result || data?.tenants || data?.data || (Array.isArray(data) ? data : [])) as Tenant[];
-      paginationData = {
-        total: data?.totalDocuments || data?.total || 0,
-        page: data?.currentPage || data?.page || page,
-        limit: data?.limit || limit,
-        totalPages: data?.totalPages || 0,
-      };
-    }
-    // Structure 3: response.data (direct response)
-    else if (response.data) {
-      const data = response.data;
-      tenants = (data?.result || data?.tenants || data?.data || (Array.isArray(data) ? data : [])) as Tenant[];
-      paginationData = {
-        total: data?.totalDocuments || data?.total || 0,
-        page: data?.currentPage || data?.page || page,
-        limit: data?.limit || limit,
-        totalPages: data?.totalPages || 0,
-      };
-    }
-    
+
+    const paginationData = {
+      total: apiData?.totalDocuments || apiData?.total || tenants.length || 0,
+      page: apiData?.currentPage || apiData?.page || page,
+      limit: apiData?.limit || limit,
+      totalPages: apiData?.totalPages || 0,
+    };
+
     // Debug logging (only in development)
     if (import.meta.env.DEV) {
-      console.log("Tenants API Response:", {
-        fullResponse: response.data,
-        extractedTenants: tenants,
+      console.log("Tenants API Response extracted:", {
+        tenants,
         pagination: paginationData
       });
     }
-    
+
     return {
       tenants: tenants,
       pagination: {
-        total: paginationData.total ?? 0,
-        page: paginationData.page ?? page,
-        limit: paginationData.limit ?? limit,
-        totalPages: paginationData.totalPages ?? 0,
+        total: paginationData.total,
+        page: paginationData.page,
+        limit: paginationData.limit,
+        totalPages: paginationData.totalPages,
       },
     };
   } catch (err: any) {
@@ -166,7 +153,7 @@ export const fetchTenants = createAsyncThunk<
       if (params.search) queryParamsForError.append("searchFields", JSON.stringify(params.search));
       if (params.sortField) queryParamsForError.append("sortBy", params.sortField);
       if (params.sortOrder) queryParamsForError.append("sortOrder", params.sortOrder);
-      
+
       console.error("Error fetching tenants:", {
         error: err,
         response: err.response?.data,
@@ -176,9 +163,9 @@ export const fetchTenants = createAsyncThunk<
       });
     }
     return rejectWithValue(
-      err.response?.data?.body?.message || 
-      err.response?.data?.message || 
-      err.message || 
+      err.response?.data?.body?.message ||
+      err.response?.data?.message ||
+      err.message ||
       "Failed to fetch tenants"
     );
   }
@@ -190,7 +177,14 @@ export const fetchTenantById = createAsyncThunk<Tenant, string>(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/tenant?id=${id}`);
-      return response.data?.body?.data;
+
+      // Handle nested structures
+      const responseData = response.data?.data?.body?.data ||
+        response.data?.body?.data ||
+        response.data?.data ||
+        response.data;
+
+      return responseData;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }

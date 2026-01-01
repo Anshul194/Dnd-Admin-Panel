@@ -61,7 +61,11 @@ export const createRole = createAsyncThunk<Role, Partial<Role>>(
   async (data, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post("/role", data);
-      return response.data?.data;
+
+      // Handle nested structures
+      const responseData = response.data?.data?.body?.data || response.data?.body?.data || response.data?.data || response.data;
+
+      return responseData;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.body?.message || err.response?.data?.message || err.message);
     }
@@ -87,11 +91,6 @@ export const fetchRoles = createAsyncThunk<
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
     if (search) queryParams.append("selectFields", JSON.stringify(search));
-    // if (Object.keys(filters).length > 0) {
-    //   queryParams.append("filters", JSON.stringify(filters));
-    // }
-    // queryParams.append("sortBy", sortField);
-    // queryParams.append("sortOrder", sortOrder);
 
     const response = await axiosInstance.get(
       `/role?${queryParams.toString()}`,
@@ -101,16 +100,29 @@ export const fetchRoles = createAsyncThunk<
         },
       }
     );
-    console.log("Full response from API:", response.data?.body);
-    const data = response.data?.body?.message || response.data;
+
+    // Handle complex nested structures common in production
+    // Try multiple possible paths to the actual data
+    let apiData = response.data?.data?.body?.data ||
+      response.data?.body?.data ||
+      response.data?.body ||
+      response.data?.data ||
+      response.data;
+
+    // Sometimes the message field actually contains the result object
+    if (response.data?.body?.message && typeof response.data.body.message === 'object') {
+      apiData = response.data.body.message;
+    }
+
+    const roles = apiData?.result || apiData?.roles || (Array.isArray(apiData) ? apiData : []);
 
     return {
-      roles: data?.result || [],
+      roles: roles,
       pagination: {
-        total: data?.totalDocuments || 0,
-        page: data?.currentPage || page,
-        limit: data?.limit || limit,
-        totalPages: data?.totalPages || 0,
+        total: apiData?.totalDocuments || apiData?.total || roles.length || 0,
+        page: apiData?.currentPage || apiData?.page || page,
+        limit: apiData?.limit || limit,
+        totalPages: apiData?.totalPages || 0,
       },
     };
   } catch (err: any) {
@@ -124,7 +136,13 @@ export const fetchRoleById = createAsyncThunk<Role, string>(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/role?id=${id}`);
-      return response.data?.body.message;
+      // Handle nested structures
+      const responseData = response.data?.data?.body?.data ||
+        response.data?.body?.data ||
+        response.data?.body?.message ||
+        response.data?.data ||
+        response.data;
+      return responseData;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
