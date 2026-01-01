@@ -27,14 +27,14 @@ export interface Lead {
   email: string;
   phone: string;
   source?:
-    | "website"
-    | "newsletter"
-    | "popup"
-    | "referral"
-    | "manual"
-    | "other"
-    | "IVR"
-    | "facebook_lead_ads";
+  | "website"
+  | "newsletter"
+  | "popup"
+  | "referral"
+  | "manual"
+  | "other"
+  | "IVR"
+  | "facebook_lead_ads";
   status: "new" | "contacted" | "assigned" | "qualified" | "converted" | "lost";
   description?: string;
   category?: string;
@@ -114,19 +114,31 @@ export const createLead = createAsyncThunk<Lead, Partial<Lead>>(
         },
       });
 
-      const { success, data: leadData } = response.data;
+      const responseData = response.data;
 
-      if (success) {
+      // Detailed logging for debugging
+      console.log("Create Lead - API Response:", responseData);
+
+      // Handle both wrapped { success, data } and unwrapped results
+      const leadData = responseData && typeof responseData === 'object' && 'success' in responseData
+        ? responseData.data
+        : responseData;
+
+      const isSuccess = responseData && typeof responseData === 'object' && 'success' in responseData
+        ? responseData.success
+        : !!responseData;
+
+      if (isSuccess) {
         return leadData;
       } else {
-        return rejectWithValue("Failed to create lead.");
+        return rejectWithValue(responseData.message || "Failed to create lead.");
       }
     } catch (error: any) {
       console.error("❌ createLead error:", error);
       return rejectWithValue(
         error?.response?.data?.message ||
-          error?.message ||
-          "Something went wrong"
+        error?.message ||
+        "Something went wrong"
       );
     }
   }
@@ -189,8 +201,8 @@ export const fetchLeads = createAsyncThunk<
       console.log(
         "Total Pages:",
         data?.data?.totalPages ||
-          data?.totalPages ||
-          Math.ceil(leadsData.length / limit)
+        data?.totalPages ||
+        Math.ceil(leadsData.length / limit)
       );
 
       return {
@@ -241,8 +253,8 @@ export const fetchLeadById = createAsyncThunk<Lead, string>(
       console.error("❌ fetchLeadById error:", error);
       return rejectWithValue(
         error?.response?.data?.message ||
-          error?.message ||
-          "Something went wrong"
+        error?.message ||
+        "Something went wrong"
       );
     }
   }
@@ -300,8 +312,8 @@ export const deleteLead = createAsyncThunk<string, string>(
       console.error("❌ deleteLead error:", error);
       return rejectWithValue(
         error?.response?.data?.message ||
-          error?.message ||
-          "Something went wrong"
+        error?.message ||
+        "Something went wrong"
       );
     }
   }
@@ -381,8 +393,8 @@ export const addMultipleLeadNotes = createAsyncThunk<
       console.error("❌ addMultipleLeadNotes error:", error);
       return rejectWithValue(
         error?.response?.data?.message ||
-          error?.message ||
-          "Something went wrong"
+        error?.message ||
+        "Something went wrong"
       );
     }
   }

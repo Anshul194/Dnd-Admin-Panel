@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { createFaq, clearError } from "../../store/slices/faq";
 import { fetchProducts } from "../../store/slices/product";
 import { RootState, AppDispatch } from "../../store";
@@ -58,13 +59,14 @@ const PageBreadcrumb: React.FC<{ pageTitle: string }> = ({ pageTitle }) => (
 
 const AddFaq: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.faq);
   const { products, loading: productsLoading } = useSelector((state: RootState) => state.product);
   const [popup, setPopup] = useState<PopupAlertProps>({
     isVisible: false,
     message: "",
     type: "",
-    onClose: () => {},
+    onClose: () => { },
   });
 
   const [formData, setFormData] = useState({
@@ -128,6 +130,11 @@ const AddFaq: React.FC = () => {
       if (createFaq.fulfilled.match(result)) {
         setPopup((prev) => ({ ...prev, isVisible: true, message: "FAQ added successfully!", type: "success" }));
         setFormData({ question: "", answer: "", type: "website", status: "active", product: "" });
+
+        // Redirect to FAQ List page
+        setTimeout(() => {
+          navigate("/faq/list");
+        }, 1500);
       } else {
         throw new Error(result.payload || "Failed to add FAQ");
       }

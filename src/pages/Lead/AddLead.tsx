@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   User,
   Mail,
@@ -45,9 +47,8 @@ const PopupAlert: React.FC<PopupAlert & { onClose: () => void }> = ({
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
         <div className="flex items-center justify-between mb-4">
           <h3
-            className={`text-lg font-semibold ${
-              type === "success" ? "text-green-600" : "text-red-600"
-            }`}
+            className={`text-lg font-semibold ${type === "success" ? "text-green-600" : "text-red-600"
+              }`}
           >
             {type === "success" ? "Success" : "Error"}
           </h3>
@@ -100,6 +101,7 @@ const PageBreadcrumb: React.FC<{ pageTitle: string }> = ({ pageTitle }) => (
 
 const AddLead: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.lead);
   const { staff, loading: staffLoading } = useSelector(
     (state: RootState) => state.staff
@@ -223,29 +225,17 @@ const AddLead: React.FC = () => {
 
     // Validation
     if (!formData.fullName) {
-      setPopup({
-        isVisible: true,
-        message: "Full name is required.",
-        type: "error",
-      });
+      toast.error("Full name is required.");
       return;
     }
 
     if (!formData.email) {
-      setPopup({
-        isVisible: true,
-        message: "Email is required.",
-        type: "error",
-      });
+      toast.error("Email is required.");
       return;
     }
 
     if (!formData.phone) {
-      setPopup({
-        isVisible: true,
-        message: "Phone number is required.",
-        type: "error",
-      });
+      toast.error("Phone number is required.");
       return;
     }
 
@@ -265,11 +255,11 @@ const AddLead: React.FC = () => {
         status: formData.status,
         notes: formData.notes
           ? [
-              {
-                note: formData.notes,
-                createdAt: new Date().toISOString(),
-              },
-            ]
+            {
+              note: formData.notes,
+              createdAt: new Date().toISOString(),
+            },
+          ]
           : [],
         assignedTo: formData.assignedTo || undefined,
       };
@@ -280,11 +270,7 @@ const AddLead: React.FC = () => {
       const result = await dispatch(createLead(leadData));
 
       if (createLead.fulfilled.match(result)) {
-        setPopup({
-          isVisible: true,
-          message: "Lead created successfully!",
-          type: "success",
-        });
+        toast.success("Lead created successfully!");
 
         // Reset form
         setFormData({
@@ -296,18 +282,20 @@ const AddLead: React.FC = () => {
           notes: "",
           assignedTo: "",
         });
+
+        // Redirect to Lead List page
+        setTimeout(() => {
+          navigate("/lead/list");
+        }, 1500);
       } else {
-        throw new Error((result.payload as string) || "Failed to create lead");
+        const errorMessage = (result.payload as string) || "Failed to create lead";
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      setPopup({
-        isVisible: true,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to create lead. Please try again.",
-        type: "error",
-      });
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Failed to create lead. Please try again.";
+      toast.error(errorMessage);
     }
   };
 
@@ -368,7 +356,7 @@ const AddLead: React.FC = () => {
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4" />
-                      Phone<span className="text-red-500">*</span>  
+                      Phone<span className="text-red-500">*</span>
                     </div>
                   </label>
                   <input
