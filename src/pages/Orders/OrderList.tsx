@@ -281,7 +281,7 @@ const OrderList: React.FC = () => {
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-gray-500 text-sm dark:text-gray-400">
-              Total: {String(typeof pagination.totalDocuments === 'object' ? (pagination.totalDocuments as any)?.$numberInt || 0 : (pagination.totalDocuments ?? pagination.total ?? 0))}
+              Total: {String(typeof pagination?.totalDocuments === 'object' ? (pagination.totalDocuments as any)?.$numberInt || 0 : (pagination?.totalDocuments ?? pagination?.total ?? 0))}
             </span>
             {/* Upload CSV Button */}
             <button
@@ -402,52 +402,55 @@ const OrderList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {orders.map((order, idx) => (
-                <tr
-                  key={order?._id && typeof order._id === "object" ? (order._id as any).$oid : (order?._id || idx)}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {(pagination.page - 1) * pagination.limit + idx + 1}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {order?._id && typeof order._id === "object" ? (order._id as any).$oid : (order?._id || "N/A")}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {order.items?.length || 0} items
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    ₹{(Number(order?.totalAmount || order?.total || 0)).toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center">
-                      {getStatusIcon(order?.status || "pending")}
-                      <span
-                        className={`ml-1 capitalize ${getStatusColor(
-                          order?.status || "pending"
-                        )}`}
-                      >
-                        {order?.status || "pending"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(order.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/orders/${order?._id && typeof order._id === "object" ? (order._id as any).$oid : order?._id || ""}`}>
-                      <button className="text-blue-500 hover:text-blue-700 transition-colors p-1">
-                        <Eye className="h-5 w-5" />
-                      </button>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {Array.isArray(orders) && orders.length > 0 && orders.map((order, idx) => {
+                if (!order) return null;
+                return (
+                  <tr
+                    key={order?._id && typeof order._id === "object" ? (order._id as any).$oid : (order?._id || idx)}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {((pagination?.page || 1) - 1) * (pagination?.limit || 10) + idx + 1}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      {order?._id && typeof order._id === "object" ? (order._id as any).$oid : (order?._id || "N/A")}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {order.items?.length || 0} items
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      ₹{(Number(order?.totalAmount || order?.total || 0)).toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex items-center">
+                        {getStatusIcon(order?.status || "pending")}
+                        <span
+                          className={`ml-1 capitalize ${getStatusColor(
+                            order?.status || "pending"
+                          )}`}
+                        >
+                          {order?.status || "pending"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <Link to={`/orders/${order?._id && typeof order._id === "object" ? (order._id as any).$oid : order?._id || ""}`}>
+                        <button className="text-blue-500 hover:text-blue-700 transition-colors p-1">
+                          <Eye className="h-5 w-5" />
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
 
           {/* Empty State */}
-          {!loading && orders.length === 0 && (
+          {!loading && (!orders || orders.length === 0) && (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-gray-400">
                 No orders found

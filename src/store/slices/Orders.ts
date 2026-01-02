@@ -138,14 +138,25 @@ export const fetchOrders = createAsyncThunk<
     console.log("Response from fetchOrders:", response.data);
     const data = response.data;
 
+    // Handle nested structures similar to Role API
+    const ordersData = data?.data || data?.body?.data || data?.body?.message?.data || [];
+
+    // Calculate total numbers safely
+    const totalDocs = data?.totalDocuments ?? data?.total ?? data?.body?.totalDocuments ?? 0;
+    const totalPages = data?.totalPages ?? data?.body?.totalPages ?? 0;
+    const currentPage = data?.currentPage ?? data?.page ?? data?.body?.currentPage ?? 1;
+
+    // Filter out any null or undefined items from orders array to prevent frontend crashes
+    const safeOrders = Array.isArray(ordersData) ? ordersData.filter((o: any) => o) : [];
+
     return {
-      orders: data?.data || [],
+      orders: safeOrders,
       pagination: {
-        total: data?.totalDocuments ?? data?.total ?? 0,
-        totalDocuments: data?.totalDocuments ?? 0,
-        page: data?.currentPage ?? data?.page ?? 1,
+        total: totalDocs,
+        totalDocuments: totalDocs,
+        page: currentPage,
         limit: limit,
-        totalPages: data?.totalPages ?? 0,
+        totalPages: totalPages,
       },
     };
   } catch (err: unknown) {
@@ -189,7 +200,7 @@ export const updateOrder = createAsyncThunk<
 // Update order delivery option
 export const updateOrderDelivery = createAsyncThunk<
   OrderDetails,
-  { id: string; [key: string]: any }
+  { id: string;[key: string]: any }
 >("orders/updateDelivery", async ({ id, ...updateData }, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.put(`/orders/${id}`, updateData, {
@@ -300,7 +311,12 @@ const orderSlice = createSlice({
       })
 
       .addCase(updateOrderDelivery.fulfilled, (state, action) => {
-        state.currentOrder = action.payload;
+        if (state.currentOrder && action.payload && action.payload._id === state.currentOrder._id) {
+          // Safely merge only top-level fields or provided fields to avoid blowing away populated data
+          state.currentOrder = { ...state.currentOrder, ...action.payload };
+        } else {
+          state.currentOrder = action.payload;
+        }
       })
 
       .addCase(updatePaymentStatus.fulfilled, (state, action) => {

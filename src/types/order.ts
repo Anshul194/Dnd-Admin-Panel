@@ -11,7 +11,8 @@ export interface OrderAddress {
 export interface OrderItem {
   product: {
     $oid: string;
-  };
+    [key: string]: any; // Allow populated fields
+  } | any;
   variant: {
     $oid: string;
   };

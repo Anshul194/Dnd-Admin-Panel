@@ -4,11 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
-import { fetchOrderById, updateOrderDelivery } from "../../store/slices/Orders";
+import { fetchOrderById, updateOrderDelivery, fetchOrders } from "../../store/slices/Orders";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { DELIVERY_OPTIONS, ORDER_STATUS_OPTIONS } from "../../types/order";
 import axiosInstance from "../../services/axiosConfig";
 
@@ -43,6 +43,7 @@ export default function EditOrder() {
   const deleiveryOptions = ["DTDC", "DELHIVERY", "BLUEDART"];
 
   const params = useParams();
+  const navigate = useNavigate();
   const orderId = params.id || "";
 
   const dispatch = useDispatch<AppDispatch>();
@@ -81,15 +82,19 @@ export default function EditOrder() {
         })
       ).unwrap();
 
-      toast.success("Order updated successfully!", {
-        duration: 3000,
-        position: "top-right",
+      setPopup({
+        isVisible: true,
+        message: "Order updated successfully!",
+        type: "success",
       });
+
+      // Fetch updated orders list (page 1)
+      dispatch(fetchOrders({ page: 1, limit: 10, sortField: "createdAt", sortOrder: "desc" }));
 
       // Redirect to orders list after successful update
       setTimeout(() => {
-        window.location.href = "/orders/list";
-      }, 1000);
+        navigate("/orders/list");
+      }, 1500);
     } catch (err: any) {
       setPopup({
         isVisible: true,
@@ -145,14 +150,19 @@ export default function EditOrder() {
 
       // If user hasn't picked a service and it's not one of the auto-pick ones, just show success for the metadata
       if (!serviceCode && !isBluedart && !isDelhivery) {
-        toast.success("Order updated successfully!", {
-          duration: 3000,
-          position: "top-right",
+        setPopup({
+          isVisible: true,
+          message: "Order updated successfully!",
+          type: "success",
         });
+
+        // Fetch updated orders list (page 1)
+        dispatch(fetchOrders({ page: 1, limit: 10, sortField: "createdAt", sortOrder: "desc" }));
+
         // Redirect to orders list after a short delay
         setTimeout(() => {
-          window.location.href = "/orders/list";
-        }, 1000);
+          navigate("/orders/list");
+        }, 1500);
         return;
       }
 
@@ -170,14 +180,19 @@ export default function EditOrder() {
         );
         console.log("shipping response ===>", response.data);
 
-        toast.success("Order updated and shipment created successfully!", {
-          duration: 3000,
-          position: "top-right",
+        setPopup({
+          isVisible: true,
+          message: "Order updated and shipment created successfully!",
+          type: "success",
         });
+
+        // Fetch updated orders list (page 1)
+        dispatch(fetchOrders({ page: 1, limit: 10, sortField: "createdAt", sortOrder: "desc" }));
+
         // Redirect to orders list after a short delay
         setTimeout(() => {
-          window.location.href = "/orders/list";
-        }, 1000);
+          navigate("/orders/list");
+        }, 1500);
       } catch (shipError: any) {
         console.error("Error creating shipment:", shipError);
         const errMsg = shipError?.response?.data?.message || "Order updated, but shipment creation failed.";
@@ -208,7 +223,9 @@ export default function EditOrder() {
       });
       console.log("label generating response ===>", response.data);
       setLabelLoading(false);
-      window.location.reload();
+      console.log("label generating response ===>", response.data);
+      setLabelLoading(false);
+      await dispatch(fetchOrderById(orderId)).unwrap();
     } catch (error) {
       console.error("Error generating label:", error);
       setLabelLoading(false);
@@ -618,7 +635,7 @@ export default function EditOrder() {
                         src={
                           image_url +
                           (item?.product?.thumbnail?.url ||
-                            item?.product?.images[0]?.url)
+                            item?.product?.images?.[0]?.url || "")
                         }
                         alt={item?.product?.name}
                         className="w-20 h-20 object-cover rounded-md"
