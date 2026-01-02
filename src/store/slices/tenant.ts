@@ -108,16 +108,18 @@ export const fetchTenants = createAsyncThunk<
     );
 
     // Handle highly nested response structures from the backend
-    // Common pattern: response.data.data.body.data
-    const apiData = response.data?.data?.body?.data ||
+    // Common pattern: response.data.data.body.data or response.data.tenants
+    const apiData = response.data?.tenants ? response.data : (
+      response.data?.data?.body?.data ||
       response.data?.body?.data ||
       response.data?.data ||
-      response.data;
+      response.data
+    );
 
     let tenants: Tenant[] = [];
 
     if (apiData) {
-      tenants = (apiData.result || apiData.tenants || apiData.data || (Array.isArray(apiData) ? apiData : [])) as Tenant[];
+      tenants = (apiData.tenants || apiData.result || apiData.data || (Array.isArray(apiData) ? apiData : [])) as Tenant[];
     }
 
     const paginationData = {
