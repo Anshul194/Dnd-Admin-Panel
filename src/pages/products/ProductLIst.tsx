@@ -21,7 +21,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 
 import { setSearchQuery } from "../../store/slices/categorySlice";
-import { deleteProduct, fetchProducts } from "../../store/slices/product";
+import { deleteProduct, fetchProducts, setFilters, resetFilters } from "../../store/slices/product";
 import axiosInstance from "../../services/axiosConfig";
 
 interface Category {
@@ -158,16 +158,20 @@ const ProductList: React.FC = () => {
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
     const activeFilters = {
-      deletedAt: null,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
+
+    console.log("Fetching products with limit:", pagination?.limit);
+    console.log("Current filters:", activeFilters);
 
     dispatch(
       fetchProducts({
         page: pagination?.page,
         limit: pagination?.limit,
-        filters: activeFilters,
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        filters: {
+          ...(localFilters.status ? { status: localFilters.status } : {}),
+        },
+        search: searchInput !== "" && { name: searchInput },
         sort: { createdAt: "desc" },
       })
     );
@@ -186,7 +190,6 @@ const ProductList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            deletedAt: null,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
           search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
@@ -202,7 +205,6 @@ const ProductList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          deletedAt: null,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
         search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
@@ -221,10 +223,19 @@ const ProductList: React.FC = () => {
     setSearchInput("");
     setLocalFilters({});
     dispatch(resetFilters());
+    dispatch(
+      fetchProducts({
+        page: 1,
+        limit: 20,
+        filters: {},
+        search: undefined,
+        sort: { createdAt: "desc" },
+      })
+    );
   };
 
-  const openDeleteModal = (category: Category) => {
-    setSubcategoryToDelete(category);
+  const openDeleteModal = (product: any) => {
+    setSubcategoryToDelete(product);
     setDeleteModalOpen(true);
   };
 

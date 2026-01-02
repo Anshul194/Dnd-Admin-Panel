@@ -30,7 +30,7 @@ import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
 import { fetchBrands } from "../../store/slices/brandSlice";
 import { createFaq } from "../../store/slices/faq"; // Import the FAQ thunk
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 
 // Interfaces
 interface Category {
@@ -110,6 +110,7 @@ interface ProductState {
 }
 
 export default function AddProduct() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [productId, setProductId] = useState<string>("");
   const [variantPopup, setVariantPopup] = useState<boolean>(false);
@@ -617,27 +618,39 @@ export default function AddProduct() {
       const createdProductId = response?.product?.data?._id;
 
       setProductId(createdProductId);
-      if (createProduct.fulfilled) {
+
+      const isSuccess = response?.success || !!createdProductId;
+
+      if (isSuccess && createdProductId) {
         // FAQ integration: create FAQ for each item in product.qa
-        if (product.qa && product.qa.length > 0 && createdProductId) {
-          for (const item of product.qa) {
-            // Prepare FAQ payload
+        if (product.qa && product.qa.length > 0) {
+          const faqPromises = product.qa.map(async (item) => {
             const faqPayload = {
               ...item,
               product: createdProductId,
-              type: "product", // always set type to "product"
+              type: "product",
             };
             try {
-              await dispatch(createFaq(faqPayload)).unwrap();
-              // Optionally show success toast for each FAQ
-              // toast.success("FAQ created!");
-            } catch (faqErr) {
-              // Optionally show error toast for each FAQ
-              // toast.error("FAQ creation failed!");
+              return await dispatch(createFaq(faqPayload)).unwrap();
+            } catch (err) {
+              console.error("FAQ Error", err);
+              return null;
             }
-          }
+          });
+          await Promise.all(faqPromises);
         }
+
         setVariantPopup(true);
+        setPopup({
+          isVisible: true,
+          message: "Product created successfully! Redirecting...",
+          type: "success",
+        });
+
+        setTimeout(() => {
+          navigate("/product/list");
+        }, 2000);
+
         setProduct({
           name: "",
           description: "",
@@ -694,8 +707,8 @@ export default function AddProduct() {
     }
     if (attributes?.length === 0) {
       // Fetch all active attributes with a high limit to get all of them
-      dispatch(fetchAttributes({ 
-        page: 1, 
+      dispatch(fetchAttributes({
+        page: 1,
         limit: 1000,
         filters: { status: 'active' }
       })).unwrap();
@@ -1191,9 +1204,8 @@ export default function AddProduct() {
                             )
                           }
                           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
-                          placeholder={`Alt text for description image ${
-                            index + 1
-                          }`}
+                          placeholder={`Alt text for description image ${index + 1
+                            }`}
                         />
                         <button
                           type="button"
@@ -1289,28 +1301,28 @@ export default function AddProduct() {
                   {attributes
                     .filter((attr: Attribute) => attr.status === 'active')
                     .map((attribute: Attribute) => (
-                    <div
-                      key={attribute._id}
-                      className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 dark:border-gray-700 dark:hover:bg-indigo-900/20 transition-colors duration-200 w-full"
-                    >
-                      <input
-                        type="checkbox"
-                        id={`attribute-${attribute._id}`}
-                        checked={product.attributeSet.includes(attribute._id)}
-                        onChange={(e) =>
-                          handleAttributeChange(attribute._id, e.target.checked)
-                        }
-                        className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 flex-shrink-0"
-                      />
-                      <label
-                        htmlFor={`attribute-${attribute._id}`}
-                        className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1 truncate"
-                        title={attribute.name}
+                      <div
+                        key={attribute._id}
+                        className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 dark:border-gray-700 dark:hover:bg-indigo-900/20 transition-colors duration-200 w-full"
                       >
-                        {attribute.name}
-                      </label>
-                    </div>
-                  ))}
+                        <input
+                          type="checkbox"
+                          id={`attribute-${attribute._id}`}
+                          checked={product.attributeSet.includes(attribute._id)}
+                          onChange={(e) =>
+                            handleAttributeChange(attribute._id, e.target.checked)
+                          }
+                          className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 flex-shrink-0"
+                        />
+                        <label
+                          htmlFor={`attribute-${attribute._id}`}
+                          className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1 truncate"
+                          title={attribute.name}
+                        >
+                          {attribute.name}
+                        </label>
+                      </div>
+                    ))}
                 </div>
               ) : (
                 <div className="flex items-center justify-center py-8 border border-gray-200 rounded-lg dark:border-gray-700">
@@ -1846,18 +1858,16 @@ export default function AddProduct() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap border-b-2 font-medium text-sm transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? `border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20`
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                    }`}
+                    className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap border-b-2 font-medium text-sm transition-all duration-200 ${activeTab === tab.id
+                      ? `border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20`
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                      }`}
                   >
                     <div
-                      className={`p-2 rounded-lg ${
-                        activeTab === tab.id
-                          ? tab.color
-                          : "bg-gray-200 dark:bg-gray-700"
-                      } text-white`}
+                      className={`p-2 rounded-lg ${activeTab === tab.id
+                        ? tab.color
+                        : "bg-gray-200 dark:bg-gray-700"
+                        } text-white`}
                     >
                       <IconComponent size={16} />
                     </div>
@@ -1967,35 +1977,35 @@ export default function AddProduct() {
           onClose={() => setPopup({ ...popup, isVisible: false })}
         />
       )}
-{variantPopup && (
-  <div className="fixed inset-0 flex justify-center items-center bg-black/40 backdrop-blur-sm z-[9999]">
-    <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] mx-4 animate-fadeIn">
-      
-      {/* Icon */}
-      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mx-auto mb-3">
-        <span className="text-yellow-600 text-2xl">⚠️</span>
-      </div>
+      {variantPopup && (
+        <div className="fixed inset-0 flex justify-center items-center bg-black/40 backdrop-blur-sm z-[9999]">
+          <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] mx-4 animate-fadeIn">
 
-      {/* Title */}
-      <h3 className="text-xl font-bold text-gray-900 text-center">
-        Variant Needed to Publish Product
-      </h3>
+            {/* Icon */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mx-auto mb-3">
+              <span className="text-yellow-600 text-2xl">⚠️</span>
+            </div>
 
-      {/* Message */}
-      <p className="text-sm text-gray-600 text-center mt-2 leading-relaxed">
-        This product cannot be displayed on your website until at least one
-        variant is added. Please create a variant to continue.
-      </p>
+            {/* Title */}
+            <h3 className="text-xl font-bold text-gray-900 text-center">
+              Variant Needed to Publish Product
+            </h3>
 
-      {/* Button */}
-      <Link to={`/variant/add?product=${productId}`}>
-        <button className="mt-6 w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm">
-          Add Variant
-        </button>
-      </Link>
-    </div>
-  </div>
-)}
+            {/* Message */}
+            <p className="text-sm text-gray-600 text-center mt-2 leading-relaxed">
+              This product cannot be displayed on your website until at least one
+              variant is added. Please create a variant to continue.
+            </p>
+
+            {/* Button */}
+            <Link to={`/variant/add?product=${productId}`}>
+              <button className="mt-6 w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm">
+                Add Variant
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
 
     </div>
   );
