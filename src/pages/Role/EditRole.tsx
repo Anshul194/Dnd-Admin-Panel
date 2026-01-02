@@ -18,7 +18,7 @@ interface ModulePermission {
 
 export default function EditRole() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  // Removed local user state
   const [role, setRole] = useState({
     name: "",
     scope: "global",
@@ -37,15 +37,15 @@ export default function EditRole() {
   const loading = useSelector((state: RootState) => state.role.loading);
   const tenants = useSelector((state: RootState) => state.tenant.tenants);
   const modules = useSelector((state: RootState) => state.modules.modules);
+  // Get user from Redux state
+  const user = useSelector((state: RootState) => state.auth.user);
 
   // Available permissions
   const availablePermissions = ["create", "read", "update", "delete"];
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Removed local storage user fetching
+
     // Fetch tenants and modules when component mounts
     dispatch(fetchModules());
     dispatch(fetchTenants());
@@ -144,7 +144,7 @@ export default function EditRole() {
       return;
     }
 
-  
+
 
     try {
       // Prepare role data
@@ -155,7 +155,7 @@ export default function EditRole() {
 
       // Update the role
       const updatedRole = await dispatch(
-        updateRole({ id: roleId, data: roleData })
+        updateRole({ id: roleId as string, data: roleData })
       ).unwrap();
 
       console.log("Updated Role:", updatedRole);
@@ -180,20 +180,28 @@ export default function EditRole() {
   };
 
   const getData = async () => {
+    if (!roleId) return; // Guard clause
     try {
       const response = await dispatch(fetchRoleById(roleId)).unwrap();
       console.log("Fetched Role Data:", response);
+
+      // Handle potential nesting if not fully caught by thunk
+      const roleData = response.result || response.role || response;
+
       let updatedRole = {
-        name: response.name,
-        scope: response.scope,
-        tenantId: response.tenantId || null,
+        name: roleData.name || "",
+        scope: roleData.scope || "global",
+        tenantId: roleData.tenantId || null,
         modulePermissions:
-          response.modulePermissions.map((mp) => ({
+          roleData.modulePermissions?.map((mp: any) => ({
             module: mp.module,
             permissions: mp.permissions || [],
           })) || [],
       };
-      if (!user?.isSuperAdmin) {
+
+      // Only override if user is loaded and not superadmin. 
+      // Ideally backend handles security, but keeping frontend logic for UI consistency.
+      if (user && !user.isSuperAdmin) {
         updatedRole.scope = "tenant";
         updatedRole.tenantId = user?.tenant || null;
       }
@@ -209,10 +217,11 @@ export default function EditRole() {
   };
 
   useEffect(() => {
-    if (user) {
-      getData();
-    }
-  }, [roleId, user]);
+    getData();
+    // Removed dependency on 'user' to prevent blocking, though 'user' is used inside.
+    // If 'user' loads LATER, we might want to re-run to force scope, but 
+    // the initial fetch should happen regardless.
+  }, [roleId, user]); // Kept user to re-evaluate scope restriction if user loads late
   return (
     <div>
       <Toaster position="top-right" />

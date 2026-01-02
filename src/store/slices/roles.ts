@@ -136,12 +136,25 @@ export const fetchRoleById = createAsyncThunk<Role, string>(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/role?id=${id}`);
-      // Handle nested structures
-      const responseData = response.data?.data?.body?.data ||
+
+      // Handle nested structures - prioritize specific paths
+      let responseData = response.data?.data?.body?.data ||
         response.data?.body?.data ||
-        response.data?.body?.message ||
         response.data?.data ||
         response.data;
+
+      // Check if message is the actual data object (legacy/specific backend structure)
+      if (response.data?.body?.message && typeof response.data.body.message === 'object') {
+        responseData = response.data.body.message;
+      } else if (response.data?.message && typeof response.data.message === 'object') {
+        responseData = response.data.message;
+      }
+
+      // If the result wraps the actual role (e.g. { result: { ... } })
+      if (responseData?.result) {
+        responseData = responseData.result;
+      }
+
       return responseData;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);

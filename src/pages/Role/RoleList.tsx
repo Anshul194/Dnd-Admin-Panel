@@ -446,7 +446,7 @@ const RoleList: React.FC = () => {
                     className="hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {(pagination?.page ?? 1 - 1) * (pagination?.limit ?? 1) + idx + 1}
+                      {((pagination?.page ?? 1) - 1) * (pagination?.limit ?? 10) + idx + 1}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                       {cat?.name ?? "-"}
@@ -506,8 +506,8 @@ const RoleList: React.FC = () => {
                 key={idx}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded ${pagination.page === page
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
               >
                 {page}
