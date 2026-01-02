@@ -124,7 +124,7 @@ const RoleList: React.FC = () => {
   const { roles, loading, error, pagination, searchQuery } = useAppSelector(
     (state) => state.role
   );
-  console?.log("roles",roles)
+  console?.log("roles", roles)
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
@@ -439,54 +439,54 @@ const RoleList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-  {roles && roles.length > 0 ? (
-    roles.map((cat, idx) => (
-      <tr
-        key={cat?._id || idx}
-        className="hover:bg-gray-50 dark:hover:bg-gray-800"
-      >
-        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-          {(pagination?.page ?? 1 - 1) * (pagination?.limit ?? 1) + idx + 1}
-        </td>
-        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-          {cat?.name ?? "-"}
-        </td>
-        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-          {cat?.scope ?? "-"}
-        </td>
-        <td className="px-6 py-4 capitalize text-sm text-gray-700 dark:text-gray-300">
-          {cat?.tenantId && typeof cat.tenantId === "object"
-            ? cat?.name ?? "-"
-            : cat?.tenantId ?? "-"}
-        </td>
-        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-          {cat?.createdAt
-            ? new Date(cat.createdAt).toLocaleDateString()
-            : "-"}
-        </td>
-        <td className="px-6 py-4 text-right space-x-2">
-          <Link to={`/roles/edit/${cat?._id}`}>
-            <button className="text-blue-500 hover:text-blue-700 transition-colors">
-              <Pencil className="h-5 w-5" />
-            </button>
-          </Link>
-          <button
-            onClick={() => openDeleteModal(cat)}
-            className="text-red-500 hover:text-red-700 transition-colors"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={6} className="text-center py-6 text-gray-500">
-        No roles found.
-      </td>
-    </tr>
-  )}
-</tbody>
+              {roles && roles.length > 0 ? (
+                roles.map((cat, idx) => (
+                  <tr
+                    key={cat?._id || idx}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {(pagination?.page ?? 1 - 1) * (pagination?.limit ?? 1) + idx + 1}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      {cat?.name ?? "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {cat?.scope ?? "-"}
+                    </td>
+                    <td className="px-6 py-4 capitalize text-sm text-gray-700 dark:text-gray-300">
+                      {cat?.tenantId && typeof cat.tenantId === "object"
+                        ? (cat.tenantId as any).companyName ?? "-"
+                        : cat?.tenantId ?? "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {cat?.createdAt
+                        ? new Date(cat.createdAt).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <Link to={`/roles/edit/${cat?._id}`}>
+                        <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                          <Pencil className="h-5 w-5" />
+                        </button>
+                      </Link>
+                      <button
+                        onClick={() => openDeleteModal(cat)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="text-center py-6 text-gray-500">
+                    No roles found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
 
           </table>
         </div>
@@ -505,11 +505,10 @@ const RoleList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
+                className={`px-3 py-1 rounded ${pagination.page === page
                     ? "bg-indigo-500 text-white"
                     : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {page}
               </button>
