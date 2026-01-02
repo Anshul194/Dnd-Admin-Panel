@@ -6,12 +6,20 @@ import { getTenantFromURL } from "../../utils/getTenantFromURL";
 // ====================== Types ======================
 export interface CallLog {
   _id: string;
+  callId: string;
   caller: string;
   receiver: string;
-  duration?: number;
+  duration?: string;
+  durationMs?: number;
   status?: string;
+  disposition?: string;
+  recordingUrl?: string;
+  agentName?: string;
+  agentNumber?: string;
+  agent?: any;
+  leadId?: any;
   type?: string;   // incoming, outgoing, missed etc.
-  createdAt?: string;
+  createdAt: string;
   updatedAt?: string;
 }
 
@@ -34,9 +42,10 @@ interface CallLogState {
   pagination: Pagination;
   searchQuery: string;
   filters: Filters;
-  leadCallLogs: CallLog[]; // <-- Add this line
-  leadCallLogsLoading: boolean; // <-- Add this line
-  leadCallLogsError: string | null; // <-- Add this line
+  leadCallLogs: CallLog[];
+  leadCallLogsLoading: boolean;
+  leadCallLogsError: string | null;
+  leadCallLogsPagination?: Pagination;
 }
 
 // ====================== Initial State ======================

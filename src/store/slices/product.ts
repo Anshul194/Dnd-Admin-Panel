@@ -207,6 +207,14 @@ const productSlice = createSlice({
       if (action.payload.limit !== undefined)
         state.pagination.limit = action.payload.limit;
     },
+    setFilters: (state, action: PayloadAction<Record<string, any>>) => {
+      // This is a placeholder as the actual filters are handled by local state
+      // but we add it to prevent dispatch errors
+      console.log("Filters set in slice:", action.payload);
+    },
+    resetFilters: (state) => {
+      state.pagination.page = 1;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -243,6 +251,6 @@ const productSlice = createSlice({
   },
 });
 
-export const { clearProducts, setSearchQuery, setPagination } =
+export const { clearProducts, setSearchQuery, setPagination, setFilters, resetFilters } =
   productSlice.actions;
 export default productSlice.reducer;

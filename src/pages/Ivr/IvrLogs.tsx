@@ -8,12 +8,12 @@ import {
   resetFilters,
 } from "../../store/slices/calllog";
 import { CallLog } from "../../store/slices/calllog";
-import { 
-  Search, 
-  Filter, 
-  RotateCcw, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Search,
+  Filter,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   X,
   Phone,
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import IverLead from './IverLead';
 import { useNavigate } from "react-router-dom";
-import { initiateCall } from "../../services/callService";
+import { initiateCall, fetchRecordingLink } from "../../services/callService";
 import toast from "react-hot-toast";
 
 // Updated status options based on API data
@@ -120,11 +120,41 @@ const formatPhoneNumber = (phone?: string | null) => {
 };
 
 // Detail Modal Component
-const CallDetailModal: React.FC<{ 
-  callLog: CallLog | null, 
-  isOpen: boolean, 
-  onClose: () => void 
+const CallDetailModal: React.FC<{
+  callLog: CallLog | null,
+  isOpen: boolean,
+  onClose: () => void
 }> = ({ callLog, isOpen, onClose }) => {
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+  const [fetchingLink, setFetchingLink] = useState(false);
+
+  useEffect(() => {
+    // Reset playing URL when a different call log is selected
+    setPlayingUrl(null);
+  }, [callLog?._id]);
+
+  const handleFetchRecording = async () => {
+    if (!callLog?.recordingUrl) {
+      toast.error("No recording URL found for this call");
+      return;
+    }
+
+    setFetchingLink(true);
+    try {
+      const link = await fetchRecordingLink(callLog.recordingUrl);
+      if (link) {
+        setPlayingUrl(link);
+        toast.success("Recording link retrieved successfully");
+      } else {
+        toast.error("Failed to retrieve playback link");
+      }
+    } catch (error) {
+      toast.error("Error connecting to recording service");
+    } finally {
+      setFetchingLink(false);
+    }
+  };
+
   if (!isOpen || !callLog) return null;
 
   return (
@@ -137,7 +167,10 @@ const CallDetailModal: React.FC<{
               Call Details
             </h2>
             <button
-              onClick={onClose}
+              onClick={() => {
+                setPlayingUrl(null);
+                onClose();
+              }}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-6 h-6" />
@@ -148,7 +181,7 @@ const CallDetailModal: React.FC<{
             {/* Call Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Call Information</h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Hash className="w-5 h-5 text-gray-500" />
@@ -203,7 +236,7 @@ const CallDetailModal: React.FC<{
             {/* Agent & Lead Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Agent & Lead Details</h3>
-              
+
               <div className="space-y-4">
                 {/* Agent Information */}
                 <div className="bg-blue-50 p-4 rounded-lg">
@@ -225,9 +258,8 @@ const CallDetailModal: React.FC<{
                         </div>
                         <div>
                           <span className="text-blue-600">Status:</span>
-                          <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                            callLog.agent.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span className={`ml-2 px-2 py-1 rounded text-xs ${callLog.agent.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
                             {callLog.agent.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
@@ -266,9 +298,8 @@ const CallDetailModal: React.FC<{
                     </div>
                     <div>
                       <span className="text-green-600">Converted:</span>
-                      <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                        callLog.leadId?.converted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`ml-2 px-2 py-1 rounded text-xs ${callLog.leadId?.converted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {callLog.leadId?.converted ? 'Yes' : 'No'}
                       </span>
                     </div>
@@ -291,24 +322,37 @@ const CallDetailModal: React.FC<{
           </div>
 
           {/* Recording Section */}
-         {callLog.recordingUrl && (
+          {callLog.recordingUrl && (
             <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-              {console.log("🎧 Recording URL:", callLog.recordingUrl, "ID:", callLog._id)}
-          
               <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
                 <Headphones className="w-5 h-5" />
                 Call Recording
               </h4>
-              <div className="flex items-center gap-4">
-                {/* Direct src use karo */}
-                <audio
-                  controls
-                  preload="none"
-                  className="flex-1"
-                  src={callLog.recordingUrl} 
-                >
-                </audio>
-          
+              <div className="flex flex-col gap-4">
+                {playingUrl ? (
+                  <audio
+                    autoPlay
+                    controls
+                    className="w-full"
+                    src={playingUrl}
+                  />
+                ) : (
+                  <button
+                    onClick={handleFetchRecording}
+                    disabled={fetchingLink}
+                    className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  >
+                    {fetchingLink ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                    {fetchingLink ? "Fetching recording..." : "Play Recording"}
+                  </button>
+                )}
+                <p className="text-xs text-purple-600 italic">
+                  Note: Recording links are temporary and generated on demand.
+                </p>
               </div>
             </div>
           )}
@@ -439,7 +483,7 @@ const IvrLogs: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800">IVR Call Logs</h1>
           <span className="text-gray-500 text-sm">Total: {pagination.total}</span>
         </div>
-        
+
         <div className="bg-white shadow p-4 rounded-md mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
@@ -452,7 +496,7 @@ const IvrLogs: React.FC = () => {
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <select
@@ -467,7 +511,7 @@ const IvrLogs: React.FC = () => {
                 ))}
               </select>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-sm">Disposition:</span>
               <select
@@ -482,7 +526,7 @@ const IvrLogs: React.FC = () => {
                 ))}
               </select>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-sm">Show:</span>
               <select
@@ -496,7 +540,7 @@ const IvrLogs: React.FC = () => {
                 <option value={50}>50</option>
               </select>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={handleResetFilters}
@@ -587,15 +631,19 @@ const IvrLogs: React.FC = () => {
                       </td> */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {log.recordingUrl ? (
-                          <div className="flex items-center gap-2">
-                            <Play className="w-4 h-4 text-green-500" />
-                            <span className="text-xs text-green-600">Available</span>
-                          </div>
+                          <button
+                            onClick={() => handleViewDetails(log)}
+                            className="flex items-center gap-2 hover:bg-green-50 p-1.5 rounded-md transition-colors group border border-transparent hover:border-green-200"
+                            title="Play Recording"
+                          >
+                            <Play className="w-4 h-4 text-green-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs text-green-600 font-medium">Play</span>
+                          </button>
                         ) : (
                           <span className="text-xs text-gray-400">Not Available</span>
                         )}
                       </td>
-                     
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <button
@@ -659,11 +707,10 @@ const IvrLogs: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handlePageChange(page)}
-                  className={`px-3 py-1 rounded-md border transition-colors ${
-                    pagination.page === page 
-                      ? "bg-indigo-500 text-white border-indigo-500" 
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
+                  className={`px-3 py-1 rounded-md border transition-colors ${pagination.page === page
+                    ? "bg-indigo-500 text-white border-indigo-500"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
                 >
                   {page}
                 </button>
@@ -695,15 +742,15 @@ const IvrLogs: React.FC = () => {
       />
       {/* IverLead Modal */}
       {leadModalOpen && leadIdForModal && (
-  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[1000010] p-4">
-    <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative shadow-2xl border border-gray-200">
-      <IverLead leadId={leadIdForModal} onClose={() => {
-        setLeadModalOpen(false);
-        setLeadIdForModal(null);
-      }} />
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[1000010] p-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative shadow-2xl border border-gray-200">
+            <IverLead leadId={leadIdForModal} onClose={() => {
+              setLeadModalOpen(false);
+              setLeadIdForModal(null);
+            }} />
+          </div>
+        </div>
+      )}
 
     </div>
   );
