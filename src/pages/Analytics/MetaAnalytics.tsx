@@ -188,12 +188,18 @@ const MetaAnalytics: React.FC = () => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            maximumFractionDigits: 0,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         }).format(value);
     };
 
     const formatNumber = (value: number) => {
         return new Intl.NumberFormat('en-IN').format(value);
+    };
+
+    const formatMetric = (value: string | number) => {
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        return isNaN(num) ? '0.00' : num.toFixed(2);
     };
 
     const kpiCards = metrics ? [
@@ -213,7 +219,7 @@ const MetaAnalytics: React.FC = () => {
             color: 'from-green-500 to-emerald-500',
             bgColor: 'bg-green-50',
             iconColor: 'text-green-600',
-            trend: '+' + metrics.ROAS + 'x ROAS',
+            trend: '+' + formatMetric(metrics.ROAS) + 'x ROAS',
         },
         {
             title: 'Total Clicks',
@@ -240,7 +246,7 @@ const MetaAnalytics: React.FC = () => {
             color: 'from-orange-500 to-amber-500',
             bgColor: 'bg-orange-50',
             iconColor: 'text-orange-600',
-            trend: metrics.conversionRate + '% CVR',
+            trend: formatMetric(metrics.conversionRate) + '% CVR',
         },
         {
             title: 'Total Leads',
@@ -249,23 +255,23 @@ const MetaAnalytics: React.FC = () => {
             color: 'from-teal-500 to-cyan-500',
             bgColor: 'bg-teal-50',
             iconColor: 'text-teal-600',
-            trend: '₹' + metrics.CPL + ' CPL',
+            trend: '₹' + formatMetric(metrics.CPL) + ' CPL',
         },
     ] : [];
 
     const performanceMetrics = metrics ? [
-        { label: 'ROAS', value: metrics.ROAS + 'x', description: 'Return on Ad Spend', good: parseFloat(metrics.ROAS) > 3 },
-        { label: 'MER', value: metrics.MER + 'x', description: 'Marketing Efficiency Ratio', good: parseFloat(metrics.MER) > 3 },
+        { label: 'ROAS', value: formatMetric(metrics.ROAS) + 'x', description: 'Return on Ad Spend', good: parseFloat(metrics.ROAS) > 3 },
+        { label: 'MER', value: formatMetric(metrics.MER) + 'x', description: 'Marketing Efficiency Ratio', good: parseFloat(metrics.MER) > 3 },
         { label: 'CTR', value: metrics.ctr.toFixed(2) + '%', description: 'Click Through Rate', good: metrics.ctr > 2 },
-        { label: 'CVR', value: metrics.conversionRate + '%', description: 'Conversion Rate', good: parseFloat(metrics.conversionRate) > 2 },
+        { label: 'CVR', value: formatMetric(metrics.conversionRate) + '%', description: 'Conversion Rate', good: parseFloat(metrics.conversionRate) > 2 },
         { label: 'CPC', value: '₹' + metrics.cpc.toFixed(2), description: 'Cost Per Click', good: metrics.cpc < 5 },
         { label: 'CPM', value: '₹' + metrics.cpm.toFixed(2), description: 'Cost Per Mille', good: metrics.cpm < 100 },
-        { label: 'RPV', value: '₹' + metrics.RPV, description: 'Revenue Per Visit', good: parseFloat(metrics.RPV) > 10 },
-        { label: 'CPL', value: '₹' + metrics.CPL, description: 'Cost Per Lead', good: parseFloat(metrics.CPL) < 200 },
-        { label: 'CPP', value: '₹' + metrics.CPP, description: 'Cost Per Purchase', good: parseFloat(metrics.CPP) < 200 },
-        { label: 'PCR', value: metrics.PCR + '%', description: 'Purchase Conversion Rate', good: parseFloat(metrics.PCR) > 1 },
-        { label: 'RPI', value: '₹' + metrics.RPI, description: 'Revenue Per Impression', good: true },
-        { label: 'RPL', value: '₹' + metrics.RPL, description: 'Revenue Per Lead', good: parseFloat(metrics.RPL) > 500 },
+        { label: 'RPV', value: '₹' + formatMetric(metrics.RPV), description: 'Revenue Per Visit', good: parseFloat(metrics.RPV) > 10 },
+        { label: 'CPL', value: '₹' + formatMetric(metrics.CPL), description: 'Cost Per Lead', good: parseFloat(metrics.CPL) < 200 },
+        { label: 'CPP', value: '₹' + formatMetric(metrics.CPP), description: 'Cost Per Purchase', good: parseFloat(metrics.CPP) < 200 },
+        { label: 'PCR', value: formatMetric(metrics.PCR) + '%', description: 'Purchase Conversion Rate', good: parseFloat(metrics.PCR) > 1 },
+        { label: 'RPI', value: '₹' + formatMetric(metrics.RPI), description: 'Revenue Per Impression', good: true },
+        { label: 'RPL', value: '₹' + formatMetric(metrics.RPL), description: 'Revenue Per Lead', good: parseFloat(metrics.RPL) > 500 },
     ] : [];
 
     return (
@@ -502,14 +508,14 @@ const MetaAnalytics: React.FC = () => {
                                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
                                         <div>
                                             <p className="text-sm text-gray-600 font-medium">Revenue Per Purchase</p>
-                                            <p className="text-2xl font-bold text-blue-700">₹{metrics.RPV}</p>
+                                            <p className="text-2xl font-bold text-blue-700">₹{formatMetric(metrics.RPV)}</p>
                                         </div>
                                         <ShoppingCart className="w-8 h-8 text-blue-600" />
                                     </div>
                                     <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl border border-purple-200">
                                         <div>
                                             <p className="text-sm text-gray-600 font-medium">Revenue Per Lead</p>
-                                            <p className="text-2xl font-bold text-purple-700">₹{metrics.RPL}</p>
+                                            <p className="text-2xl font-bold text-purple-700">₹{formatMetric(metrics.RPL)}</p>
                                         </div>
                                         <Users className="w-8 h-8 text-purple-600" />
                                     </div>
@@ -533,14 +539,14 @@ const MetaAnalytics: React.FC = () => {
                                     <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-200">
                                         <div>
                                             <p className="text-sm text-gray-600 font-medium">Cost Per Purchase</p>
-                                            <p className="text-2xl font-bold text-orange-700">₹{metrics.CPP}</p>
+                                            <p className="text-2xl font-bold text-orange-700">₹{formatMetric(metrics.CPP)}</p>
                                         </div>
                                         <ShoppingCart className="w-8 h-8 text-orange-600" />
                                     </div>
                                     <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200">
                                         <div>
                                             <p className="text-sm text-gray-600 font-medium">Cost Per Lead</p>
-                                            <p className="text-2xl font-bold text-amber-700">₹{metrics.CPL}</p>
+                                            <p className="text-2xl font-bold text-amber-700">₹{formatMetric(metrics.CPL)}</p>
                                         </div>
                                         <Users className="w-8 h-8 text-amber-600" />
                                     </div>
