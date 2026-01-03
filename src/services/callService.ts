@@ -2,6 +2,8 @@ import axiosInstance from "./axiosConfig";
 
 export interface InitiateCallRequest {
   leadId: string;
+  agentId?: string;
+  agentNumber?: string;
 }
 
 export interface InitiateCallResponse {
@@ -14,12 +16,14 @@ export interface InitiateCallResponse {
  * Initiate a call to a lead
  */
 export const initiateCall = async (
-  leadId: string
+  leadId: string,
+  agentId?: string,
+  agentNumber?: string
 ): Promise<InitiateCallResponse> => {
   try {
     const response = await axiosInstance.post<InitiateCallResponse>(
       "/call/initiate",
-      { leadId }
+      { leadId, agentId, agentNumber }
     );
     return response.data;
   } catch (error: any) {

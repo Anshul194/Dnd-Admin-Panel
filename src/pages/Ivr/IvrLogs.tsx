@@ -453,7 +453,29 @@ const IvrLogs: React.FC = () => {
 
     setInitiatingCall(leadId);
     try {
-      const response = await initiateCall(leadId);
+      // Get current user to ensure call connects to them
+      let agentId = undefined;
+      let agentNumber = undefined;
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          console.log("DEBUG: Full user object from localStorage:", user);
+          agentId = user._id || user.id;
+          // Fallback to user-provided number if missing in profile
+          agentNumber = user.phone || user.phoneNumber || user.mobile || "9824853820";
+          console.log("DEBUG: Resolved agentId:", agentId, "agentNumber:", agentNumber);
+        } else {
+          console.warn("DEBUG: No user found in localStorage");
+          // Fallback even if no user found (though unlikely for logged in app)
+          agentNumber = "9824853820";
+        }
+      } catch (e) {
+        console.warn("Could not retrieve current user for call initiation", e);
+        agentNumber = "9824853820";
+      }
+
+      const response = await initiateCall(leadId, agentId, agentNumber);
       toast.success(response.message || "Call initiated successfully!");
     } catch (error: any) {
       toast.error(error.message || "Failed to initiate call");
