@@ -131,7 +131,8 @@ export default function AddProduct() {
     descriptionVideo: "",
     highlights: [""],
     attributeSet: [],
-    status: "active",
+    attributeSet: [],
+    status: "inactive",
     ingredients: [
       { name: "", quantity: "", description: "", image: null, alt: "" },
     ],
@@ -643,12 +644,12 @@ export default function AddProduct() {
         setVariantPopup(true);
         setPopup({
           isVisible: true,
-          message: "Product created successfully! Redirecting...",
+          message: "Product draft created! Redirecting to add variants to complete setup...",
           type: "success",
         });
 
         setTimeout(() => {
-          navigate("/product/list");
+          navigate(`/variant/add?product=${createdProductId}`);
         }, 2000);
 
         setProduct({
