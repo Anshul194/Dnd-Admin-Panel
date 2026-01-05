@@ -8,8 +8,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  images: string[];
-  category: string;
+  images: (string | { url: string })[];
+  thumbnail?: string | { url: string };
+  status: string;
+  category: string | { _id: string; name: string };
   createdAt: string;
   updatedAt: string;
   // Add other fields as per your schema

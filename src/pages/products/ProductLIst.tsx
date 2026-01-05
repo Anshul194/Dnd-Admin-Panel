@@ -125,11 +125,11 @@ const DeleteModal: React.FC<{
 
 const ProductList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { products, loading, error, pagination, searchQuery, filters } =
+  const { products, loading, error, pagination, searchQuery } =
     useAppSelector((state) => state.product);
 
   const [subcategoryToDelete, setSubcategoryToDelete] =
-    useState<Subcategory | null>(null);
+    useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -455,8 +455,26 @@ const ProductList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <img
-                          src={`${import.meta.env.VITE_IMAGE_URL}${cat?.thumbnail?.url || cat?.images[0]?.url || ""
-                            }`}
+                          src={(() => {
+                            const baseUrl = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
+                            let imagePath = "";
+
+                            if (cat.thumbnail) {
+                              imagePath = typeof cat.thumbnail === "string"
+                                ? cat.thumbnail
+                                : cat.thumbnail.url || "";
+                            } else if (cat.images && cat.images.length > 0) {
+                              const firstImage = cat.images[0];
+                              imagePath = typeof firstImage === "string"
+                                ? firstImage
+                                : firstImage.url || "";
+                            }
+
+                            // If path is already absolute (starts with http), return it as is
+                            if (imagePath.startsWith("http")) return imagePath;
+
+                            return imagePath ? `${baseUrl}${imagePath}` : "";
+                          })()}
                           onError={(e) => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src =
