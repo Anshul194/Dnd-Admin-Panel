@@ -22,7 +22,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
-import { fetchVariants, deleteAttribute } from "../../store/slices/variant";
+import { fetchVariants, deleteAttribute, fetchProducts } from "../../store/slices/variant";
 
 interface Variant {
   _id: string;
@@ -144,12 +144,13 @@ const DeleteModal: React.FC<{
 
 const VariantList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { variants, loading, error } = useAppSelector((state) => state.variant);
+  const { variants, loading, error, products } = useAppSelector((state) => state.variant);
   // derive variants safely when needed inside memoized helpers
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [variantToDelete, setVariantToDelete] = useState<Variant | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchInput, setSearchInput] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
   const [pagination, setPagination] = useState({
     page: 1,
@@ -173,8 +174,9 @@ const VariantList: React.FC = () => {
   // Fetch variants on mount
   useEffect(() => {
     const tenant = "default"; // Replace with actual tenant logic
-    dispatch(fetchVariants({ tenant }));
-  }, [dispatch]);
+    dispatch(fetchVariants({ tenant, productId: selectedProduct }));
+    dispatch(fetchProducts({ tenant }));
+  }, [dispatch, selectedProduct]);
 
   // Update pagination total and totalPages when variants change
   // Compute filtered variants based on search and local filters
@@ -242,6 +244,7 @@ const VariantList: React.FC = () => {
 
   const handleResetFilters = () => {
     setSearchInput("");
+    setSelectedProduct("");
     setLocalFilters({});
   };
 
@@ -441,6 +444,22 @@ const VariantList: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Product:</span>
+              <select
+                value={selectedProduct}
+                onChange={(e) => setSelectedProduct(e.target.value)}
+                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium outline-none max-w-[200px]"
+              >
+                <option value="">All Products</option>
+                {products.map((prod: any) => (
+                  <option key={prod._id} value={prod._id}>
+                    {prod.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl">
               <Filter className="h-5 w-5 text-indigo-500" />
               <select
                 value={localFilters.stock || ""}
@@ -510,129 +529,129 @@ const VariantList: React.FC = () => {
         <div className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  #
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Title & SKU
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Attributes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Sale
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Stock
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white/50 dark:bg-gray-900/30 divide-y divide-gray-100 dark:divide-gray-800">
-              {/** Use paginated, filtered variants for rendering */}
-              {filteredVariants
-                .slice(
-                  (pagination.page - 1) * pagination.limit,
-                  pagination.page * pagination.limit
-                )
-                .map((variant, idx) => {
-                  const stockStatus = getStockStatus(variant.stock);
-                  return (
-                    <tr
-                      key={variant._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        {(pagination.page - 1) * pagination.limit + idx + 1}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                        <img
-                           src={
-                             variant.images && variant.images[0]
-                               ? `${import.meta.env.VITE_IMAGE_URL}/${variant.images[0]}`
-                               : "https://www.redecredauto.com.br/portal/assets/images/default.jpg"
-                           }
-                           onError={(e) => {
-                             e.currentTarget.onerror = null;
-                             e.currentTarget.src = "https://www.redecredauto.com.br/portal/assets/images/default.jpg";
-                           }}
-                           alt={variant.title}
-                           className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 dark:border-gray-700"
-                           onClick={() => {
-                             console.log("Variant image clicked:", variant);
-                           }}
-                         />
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    #
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Image
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Title & SKU
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Attributes
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Sale
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Stock
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white/50 dark:bg-gray-900/30 divide-y divide-gray-100 dark:divide-gray-800">
+                {/** Use paginated, filtered variants for rendering */}
+                {filteredVariants
+                  .slice(
+                    (pagination.page - 1) * pagination.limit,
+                    pagination.page * pagination.limit
+                  )
+                  .map((variant, idx) => {
+                    const stockStatus = getStockStatus(variant.stock);
+                    return (
+                      <tr
+                        key={variant._id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {(pagination.page - 1) * pagination.limit + idx + 1}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <img
+                              src={
+                                variant.images && variant.images[0]
+                                  ? `${import.meta.env.VITE_IMAGE_URL}/${variant.images[0]}`
+                                  : "https://www.redecredauto.com.br/portal/assets/images/default.jpg"
+                              }
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = "https://www.redecredauto.com.br/portal/assets/images/default.jpg";
+                              }}
+                              alt={variant.title}
+                              className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 dark:border-gray-700"
+                              onClick={() => {
+                                console.log("Variant image clicked:", variant);
+                              }}
+                            />
 
-                          {variant.isDefault && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                              <Star className="w-3 h-3 text-white fill-current" />
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col space-y-1">
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {variant.title}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {renderAttributes(variant.attributes)}
-                      </td>
-                      <td className="dark:text-white px-6 py-4">
-                        {variant.price}
-                      </td>
-                      <td className="dark:text-white px-6 py-4">
-                        {variant.salePrice}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div
-                          className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg ${stockStatus.bgColor} ${stockStatus.borderColor}`}
-                        >
-                          <Package className={`w-6 h-6 ${stockStatus.color}`} />
-                          <div className="flex flex-col">
-                            <span
-                              className={`text-xs font-medium ${stockStatus.color}`}
-                            >
-                              {stockStatus.text} ({variant.stock})
+                            {variant.isDefault && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                <Star className="w-3 h-3 text-white fill-current" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col space-y-1">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {variant.title}
                             </span>
                           </div>
-                        </div>
-                      </td>
+                        </td>
+                        <td className="px-6 py-4">
+                          {renderAttributes(variant.attributes)}
+                        </td>
+                        <td className="dark:text-white px-6 py-4">
+                          {variant.price}
+                        </td>
+                        <td className="dark:text-white px-6 py-4">
+                          {variant.salePrice}
+                        </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link to={`/variant/edit/${variant._id}`}>
-                            <button className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all dark:hover:bg-blue-900/20">
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                          </Link>
-                          <button
-                            onClick={() => openDeleteModal(variant)}
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all dark:hover:bg-red-900/20"
+                        <td className="px-6 py-4">
+                          <div
+                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg ${stockStatus.bgColor} ${stockStatus.borderColor}`}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+                            <Package className={`w-6 h-6 ${stockStatus.color}`} />
+                            <div className="flex flex-col">
+                              <span
+                                className={`text-xs font-medium ${stockStatus.color}`}
+                              >
+                                {stockStatus.text} ({variant.stock})
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link to={`/variant/edit/${variant._id}`}>
+                              <button className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all dark:hover:bg-blue-900/20">
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                            </Link>
+                            <button
+                              onClick={() => openDeleteModal(variant)}
+                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
           </div>
         </div>
 

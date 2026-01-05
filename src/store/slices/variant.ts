@@ -58,24 +58,30 @@ const initialState: VariantState = {
 };
 
 // Fetch variants
-export const fetchVariants = createAsyncThunk<Variant[], { tenant: string }>(
-  "variants/fetchAll",
-  async ({ tenant }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.get("/variant", {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "x-tenant": getTenantFromURL(),
-        },
-      });
-      // console.log("Fetched variants response:", response.data);
-      return response.data?.data?.result || [];
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+export const fetchVariants = createAsyncThunk<
+  Variant[],
+  { tenant: string; productId?: string }
+>("variants/fetchAll", async ({ tenant, productId }, { rejectWithValue }) => {
+  try {
+    const params: any = {};
+    if (productId) {
+      params.filters = JSON.stringify({ productId });
     }
+
+    const response = await axiosInstance.get("/variant", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-tenant": getTenantFromURL(),
+      },
+      params,
+    });
+    // console.log("Fetched variants response:", response.data);
+    return response.data?.data?.result || [];
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // Fetch attributes with pagination, filters, search, and sort
 
@@ -132,10 +138,10 @@ export const fetchAttributes = createAsyncThunk<
     // Map API result to dropdown format
     const result = Array.isArray(data.result)
       ? data.result.map((attr: any) => ({
-          _id: attr._id,
-          attributeId: attr._id,
-          value: attr.name,
-        }))
+        _id: attr._id,
+        attributeId: attr._id,
+        value: attr.name,
+      }))
       : [];
     return {
       result,
@@ -210,26 +216,26 @@ export const createVariant = createAsyncThunk<
     }
     // Filter out empty attributes and only send valid ones
     const validAttributes = payload.attributes.filter(
-      (attr) => 
-        attr && 
-        attr.attributeId && 
-        attr.value && 
-        typeof attr.attributeId === 'string' && 
+      (attr) =>
+        attr &&
+        attr.attributeId &&
+        attr.value &&
+        typeof attr.attributeId === 'string' &&
         typeof attr.value === 'string' &&
-        attr.attributeId.trim() !== '' && 
+        attr.attributeId.trim() !== '' &&
         attr.value.trim() !== ''
     );
-    
+
     // Ensure at least one valid attribute
     if (validAttributes.length === 0) {
       return rejectWithValue('At least one valid attribute is required');
     }
-    
+
     validAttributes.forEach((attr, idx) => {
       formData.append(`attributes[${idx}][attributeId]`, attr.attributeId.trim());
       formData.append(`attributes[${idx}][value]`, attr.value.trim());
     });
-    
+
     const response = await axiosInstance.post("/variant", formData, {
       headers: {
         "x-tenant": getTenantFromURL(),
@@ -318,7 +324,7 @@ export const updateVariant = createAsyncThunk<
     // Log FormData content (for dev/debug only)
     // console.log("📦 [updateVariant] FormData content:");
     for (let [key, value] of formData.entries()) {
-            // console.log(` - ${key}:`, value);
+      // console.log(` - ${key}:`, value);
     }
 
     const response = await axiosInstance.put(
@@ -338,7 +344,7 @@ export const updateVariant = createAsyncThunk<
     // console.error(
     //   "❌ [updateVariant] Error:",
     //     err.response?.data || err.message
-   // );
+    // );
     return rejectWithValue(err.response?.data?.message || err.message);
   }
 });
