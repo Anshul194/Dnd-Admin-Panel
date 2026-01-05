@@ -345,10 +345,11 @@ const MetaAnalytics: React.FC = () => {
                                 <div>
                                     <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
                                     <div className="relative">
-                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                         <input
                                             type="date"
                                             value={dateRange.since}
+                                            onClick={(e) => e.currentTarget.showPicker()}
                                             onChange={(e) => handleCustomDateChange('since', e.target.value)}
                                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                         />
@@ -357,10 +358,11 @@ const MetaAnalytics: React.FC = () => {
                                 <div>
                                     <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
                                     <div className="relative">
-                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                         <input
                                             type="date"
                                             value={dateRange.until}
+                                            onClick={(e) => e.currentTarget.showPicker()}
                                             onChange={(e) => handleCustomDateChange('until', e.target.value)}
                                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                         />
