@@ -131,7 +131,6 @@ export default function AddProduct() {
     descriptionVideo: "",
     highlights: [""],
     attributeSet: [],
-    attributeSet: [],
     status: "inactive",
     ingredients: [
       { name: "", quantity: "", description: "", image: null, alt: "" },
