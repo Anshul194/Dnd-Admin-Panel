@@ -533,6 +533,10 @@ export default function EditProduct() {
       formData.append(`ingredients[${index}].description`, ing.description);
       if (ing.image instanceof File) {
         formData.append(`ingredients[${index}].image`, ing.image);
+      } else if (typeof ing.image === "string") {
+        formData.append(`ingredients[${index}].image`, ing.image);
+      } else {
+        formData.append(`ingredients[${index}].image`, "");
       }
       formData.append(`ingredients[${index}].alt`, ing.alt);
     });
@@ -542,6 +546,10 @@ export default function EditProduct() {
       formData.append(`benefits[${index}].description`, b.description);
       if (b.image instanceof File) {
         formData.append(`benefits[${index}].image`, b.image);
+      } else if (typeof b.image === "string") {
+        formData.append(`benefits[${index}].image`, b.image);
+      } else {
+        formData.append(`benefits[${index}].image`, "");
       }
       formData.append(`benefits[${index}].alt`, b.alt);
     });
@@ -551,6 +559,10 @@ export default function EditProduct() {
       formData.append(`precautions[${index}].description`, p.description);
       if (p.image instanceof File) {
         formData.append(`precautions[${index}].image`, p.image);
+      } else if (typeof p.image === "string") {
+        formData.append(`precautions[${index}].image`, p.image);
+      } else {
+        formData.append(`precautions[${index}].image`, "");
       }
       formData.append(`precautions[${index}].alt`, p.alt);
     });
@@ -585,7 +597,7 @@ export default function EditProduct() {
           typeof response.payload === "string"
             ? response.payload
             : (response.payload as any)?.message ||
-              "Failed to update product. Please try again.";
+            "Failed to update product. Please try again.";
         dispatch(showAlert({ message: errorMessage, type: "error" }));
       }
     } catch (err: any) {
@@ -595,9 +607,9 @@ export default function EditProduct() {
         typeof err === "string"
           ? err
           : err?.response?.data?.body?.message ||
-            err?.response?.data?.message ||
-            err?.message ||
-            "Failed to update product. Please try again.";
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to update product. Please try again.";
       dispatch(showAlert({ message: errorMessage, type: "error" }));
     }
   };
@@ -629,9 +641,9 @@ export default function EditProduct() {
           })) || [],
         thumbnail: data.thumbnail
           ? {
-              file: data.thumbnail.url || data.thumbnail,
-              alt: data.thumbnail.alt || "",
-            }
+            file: data.thumbnail.url || data.thumbnail,
+            alt: data.thumbnail.alt || "",
+          }
           : null,
         howToUseTitle: data.howToUseTitle || "",
         howToUseVideo: data.howToUseVideo || "",
@@ -657,8 +669,8 @@ export default function EditProduct() {
           image: ing.image?.url || ing.image || null,
           alt: ing.image?.alt || "",
         })) || [
-          { name: "", quantity: "", description: "", image: null, alt: "" },
-        ],
+            { name: "", quantity: "", description: "", image: null, alt: "" },
+          ],
         benefits: Object.values(data?.benefits)?.map((b: any) => ({
           title: b.title || "",
           description: b.description || "",
@@ -764,11 +776,11 @@ export default function EditProduct() {
       prev.map((item, i) =>
         i === index
           ? {
-              ...item,
-              [field]: value,
-              type: "product", // always product
-              product: productId || "",
-            }
+            ...item,
+            [field]: value,
+            type: "product", // always product
+            product: productId || "",
+          }
           : item
       )
     );
@@ -1386,9 +1398,8 @@ export default function EditProduct() {
                             )
                           }
                           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
-                          placeholder={`Alt text for description image ${
-                            index + 1
-                          }`}
+                          placeholder={`Alt text for description image ${index + 1
+                            }`}
                         />
                         <button
                           type="button"
@@ -1581,11 +1592,21 @@ export default function EditProduct() {
                 </div>
                 {ingredient.image && (
                   <div className="mb-4 space-y-2">
-                    <img
-                      src={getImageUrl(ingredient.image)}
-                      alt={ingredient.alt || `Ingredient ${index + 1}`}
-                      className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                    />
+                    <div className="relative w-fit">
+                      <img
+                        src={getImageUrl(ingredient.image)}
+                        alt={ingredient.alt || `Ingredient ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateIngredientImage(index, null)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
+                        title="Remove Image"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={ingredient.alt}
@@ -1726,11 +1747,21 @@ export default function EditProduct() {
                   </div>
                   {benefit.image && (
                     <div className="mb-4 space-y-2">
-                      <img
-                        src={getImageUrl(benefit.image)}
-                        alt={benefit.alt || `Benefit ${index + 1}`}
-                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                      />
+                      <div className="relative w-fit">
+                        <img
+                          src={getImageUrl(benefit.image as any)}
+                          alt={benefit.alt || `Benefit ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateBenefitImage(index, null)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
+                          title="Remove Image"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                       <input
                         type="text"
                         value={benefit.alt}
@@ -1828,11 +1859,21 @@ export default function EditProduct() {
                   </div>
                   {precaution.image && (
                     <div className="mb-4 space-y-2">
-                      <img
-                        src={getImageUrl(precaution.image)}
-                        alt={precaution.alt || `Precaution ${index + 1}`}
-                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                      />
+                      <div className="relative w-fit">
+                        <img
+                          src={getImageUrl(precaution.image as any)}
+                          alt={precaution.alt || `Precaution ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updatePrecautionImage(index, null)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
+                          title="Remove Image"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                       <input
                         type="text"
                         value={precaution.alt}
@@ -2060,18 +2101,16 @@ export default function EditProduct() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap border-b-2 font-medium text-sm transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? `border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20`
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                    }`}
+                    className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap border-b-2 font-medium text-sm transition-all duration-200 ${activeTab === tab.id
+                      ? `border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20`
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                      }`}
                   >
                     <div
-                      className={`p-2 rounded-lg ${
-                        activeTab === tab.id
-                          ? tab.color
-                          : "bg-gray-200 dark:bg-gray-700"
-                      } text-white`}
+                      className={`p-2 rounded-lg ${activeTab === tab.id
+                        ? tab.color
+                        : "bg-gray-200 dark:bg-gray-700"
+                        } text-white`}
                     >
                       <IconComponent size={16} />
                     </div>

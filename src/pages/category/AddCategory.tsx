@@ -4,7 +4,7 @@ import { Sparkles, Image as ImageIcon } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
-import { createCategory } from "../../store/slices/categorySlice";
+import { createCategory, fetchCategories } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
@@ -124,6 +124,16 @@ export default function AddCategory() {
         allowPrepaidOnly: false,
         disableCOD: false,
       });
+
+      // Refresh the category list in Redux state
+      await dispatch(fetchCategories({
+        page: 1,
+        limit: 10,
+        filters: { deletedAt: null },
+        search: "",
+        sortField: "createdAt",
+        sortOrder: "desc",
+      }));
 
       // Redirect to category list page after successful creation
       setTimeout(() => {

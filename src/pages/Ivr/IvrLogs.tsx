@@ -32,6 +32,7 @@ import {
 import IverLead from './IverLead';
 import { useNavigate } from "react-router-dom";
 import { initiateCall, fetchRecordingLink } from "../../services/callService";
+import axiosInstance from "../../services/axiosConfig";
 import toast from "react-hot-toast";
 
 // Updated status options based on API data
@@ -372,6 +373,8 @@ const IvrLogs: React.FC = () => {
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [leadIdForModal, setLeadIdForModal] = useState<string | null>(null);
   const [initiatingCall, setInitiatingCall] = useState<string | null>(null);
+  const [activeCallId, setActiveCallId] = useState<string | null>(null);
+  const [activeCallStatus, setActiveCallStatus] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -477,6 +480,12 @@ const IvrLogs: React.FC = () => {
 
       const response = await initiateCall(leadId, agentId, agentNumber);
       toast.success(response.message || "Call initiated successfully!");
+
+      if (response.data?.callId || response.data?.unique_id) {
+        const id = response.data.callId || response.data.unique_id;
+        setActiveCallId(id);
+        setActiveCallStatus("initiated");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to initiate call");
       console.error("Error initiating call:", error);
@@ -484,6 +493,44 @@ const IvrLogs: React.FC = () => {
       setInitiatingCall(null);
     }
   };
+
+  // Polling logic for active call status
+  useEffect(() => {
+    let interval: any;
+
+    const checkStatus = async () => {
+      if (!activeCallId) return;
+
+      try {
+        const response = await axiosInstance.get("/calllog", {
+          params: { callId: activeCallId },
+        });
+
+        const logs = response.data?.callLogs || response.data?.data?.callLogs || [];
+        if (logs.length > 0) {
+          const status = logs[0].status;
+          setActiveCallStatus(status);
+
+          // Stop polling if terminal status
+          const terminalStatuses = ["ANSWERED", "ANSWER", "CANCEL", "MISSED", "completed", "failed"];
+          if (terminalStatuses.includes(status)) {
+            setActiveCallId(null);
+            toast.success(`Call status: ${status}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error polling call status:", error);
+      }
+    };
+
+    if (activeCallId) {
+      interval = setInterval(checkStatus, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activeCallId]);
 
   const generatePageNumbers = () => {
     const pages = [];
@@ -503,7 +550,17 @@ const IvrLogs: React.FC = () => {
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 xl:px-10 xl:py-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">IVR Call Logs</h1>
-          <span className="text-gray-500 text-sm">Total: {pagination.total}</span>
+          <div className="flex items-center gap-4">
+            {activeCallId && (
+              <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 animate-pulse">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-sm font-medium text-blue-700">
+                  Active Call: <span className="uppercase">{activeCallStatus}</span>
+                </span>
+              </div>
+            )}
+            <span className="text-gray-500 text-sm">Total: {pagination.total}</span>
+          </div>
         </div>
 
         <div className="bg-white shadow p-4 rounded-md mb-6">
