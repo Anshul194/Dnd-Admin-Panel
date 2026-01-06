@@ -42,12 +42,12 @@ import {
   ArrowLeft,
   PlayCircle,
 } from "lucide-react";
+import { useAppDispatch } from "../../hooks/redux";
 import {
   COMPONENT_TYPES,
   COMPONENT_VARIANTS,
   ComponentRenderer,
 } from "./Variant";
-import { useDispatch } from "react-redux";
 import { fetchProductById, Product } from "../../store/slices/product";
 import {
   createTemplate,
@@ -55,8 +55,9 @@ import {
   updateTemplate,
 } from "../../store/slices/template";
 import { AppDispatch } from "../../store";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
+import PopupAlert from "../../components/popUpAlert";
 
 // Types for the component structure
 interface ComponentType {
@@ -152,6 +153,21 @@ const SPACE_CLASSES: Record<number, string> = {
 };
 
 // Droppable column component
+interface DroppableColumnProps {
+  id: string;
+  children: React.ReactNode;
+  title: string;
+  isEmpty: boolean;
+  width: number;
+  onWidthChange: (columnIndex: number, width: number) => void;
+  columnIndex: number;
+  totalColumns?: number;
+  onRemoveColumn: (columnIndex: number) => void;
+  canRemove: boolean;
+  componentGap?: number;
+  isPreviewMode?: boolean;
+}
+
 function DroppableColumn({
   id,
   children,
@@ -165,7 +181,7 @@ function DroppableColumn({
   canRemove,
   componentGap = 2,
   isPreviewMode = false,
-}) {
+}: DroppableColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
     id,
   });
@@ -179,17 +195,14 @@ function DroppableColumn({
     <div
       ref={setNodeRef}
       style={style}
-      className={`${COLUMN_WIDTHS[width].flex} ${
-        isPreviewMode ? "min-h-0" : "min-h-96"
-      } ${
-        isPreviewMode ? "" : "p-2 border-2 border-dashed"
-      } transition-colors text-black ${
-        !isPreviewMode && isEmpty
+      className={`${COLUMN_WIDTHS[width].flex} ${isPreviewMode ? "min-h-0" : "min-h-96"
+        } ${isPreviewMode ? "" : "p-2 border-2 border-dashed"
+        } transition-colors text-black ${!isPreviewMode && isEmpty
           ? "border-gray-300 bg-gray-50"
           : !isPreviewMode && !isEmpty
-          ? "border-gray-200 bg-white"
-          : ""
-      } ${isOver && !isPreviewMode ? "border-blue-500 bg-blue-50" : ""}`}
+            ? "border-gray-200 bg-white"
+            : ""
+        } ${isOver && !isPreviewMode ? "border-blue-500 bg-blue-50" : ""}`}
     >
       {!isPreviewMode && (
         <div className="flex items-center justify-between gap-2 mb-4 p-2 bg-white rounded-lg shadow-sm">
@@ -197,7 +210,7 @@ function DroppableColumn({
             <Layout size={16} className="text-gray-600" />
             <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
             <span className="text-xs text-gray-500">
-              ({children?.length || 0})
+              ({Array.isArray(children) ? children.length : 0})
             </span>
           </div>
 
@@ -253,7 +266,7 @@ function DroppableColumn({
 }
 
 // Full width component wrapper for spanning
-function FullWidthComponent({ children, isFullWidth }) {
+function FullWidthComponent({ children, isFullWidth }: { children: React.ReactNode; isFullWidth: boolean }) {
   if (isFullWidth) {
     return (
       <div className="w-full bg-white border border-gray-200 shadow-sm rounded-lg">
@@ -272,6 +285,13 @@ function SortableItem({
   span = 1,
   totalColumns = 3,
   isPreviewMode = false,
+}: {
+  id: string;
+  children: React.ReactNode;
+  columnId: string;
+  span?: number;
+  totalColumns?: number;
+  isPreviewMode?: boolean;
 }) {
   const {
     attributes,
@@ -324,6 +344,21 @@ function SortableItem({
 // (Note: ComponentRenderer is imported from componentVariants.tsx)
 
 // Available components sidebar
+interface ComponentLibraryProps {
+  onAddComponent: (type: string, title: string) => void;
+  sections: SectionType[];
+  columnGap: number;
+  componentGap: number;
+  rowGap: number;
+  selectedComponent: ComponentType | null;
+  componentSettings: ComponentSettings;
+  onUpdateSettings: (componentId: string, settings: any) => void;
+  onUpdateSpan: (componentId: string, span: number) => void;
+  COMPONENT_SPANS: typeof COMPONENT_SPANS;
+  onChangeName: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  name: string;
+}
+
 function ComponentLibrary({
   onAddComponent,
   sections,
@@ -337,7 +372,7 @@ function ComponentLibrary({
   COMPONENT_SPANS,
   onChangeName,
   name,
-}) {
+}: ComponentLibraryProps) {
   const availableComponents = [
     { type: COMPONENT_TYPES.IMAGES, title: "Product Images", icon: Image },
     { type: COMPONENT_TYPES.DETAILS, title: "Product Details", icon: FileText },
@@ -369,8 +404,8 @@ function ComponentLibrary({
   const existingTypes = sections.flatMap((section) =>
     section.type === "columns"
       ? section.columns.flatMap((col) =>
-          col.components.map((comp) => comp.type)
-        )
+        col.components.map((comp) => comp.type)
+      )
       : []
   );
 
@@ -409,20 +444,18 @@ function ComponentLibrary({
                 key={comp.type}
                 onClick={() => onAddComponent(comp.type, comp.title)}
                 disabled={isAdded}
-                className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg transition-colors ${
-                  isAdded
-                    ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg transition-colors ${isAdded
+                  ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                  }`}
               >
                 <IconComponent
                   size={16}
                   className={isAdded ? "text-gray-400" : "text-gray-600"}
                 />
                 <span
-                  className={`font-medium text-xs ${
-                    isAdded ? "text-gray-400" : "text-gray-900"
-                  }`}
+                  className={`font-medium text-xs ${isAdded ? "text-gray-400" : "text-gray-900"
+                    }`}
                 >
                   {comp.title}
                 </span>
@@ -830,6 +863,15 @@ export default function ProductPageBuilder() {
   const [componentGap, setComponentGap] = useState(2); // Gap between components (0-8)
   const [rowGap, setRowGap] = useState(4); // Gap between rows (0-8)
   const [product, setProduct] = useState<Product | null>(null);
+  const [popup, setPopup] = useState<{
+    message: string;
+    type: "success" | "error";
+    isVisible: boolean;
+  }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
   // Use ref to track current sections for drag operations
   const sectionsRef = useRef(sections);
 
@@ -838,7 +880,7 @@ export default function ProductPageBuilder() {
     sectionsRef.current = sections;
   }, [sections]);
 
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -852,7 +894,7 @@ export default function ProductPageBuilder() {
   );
 
   const handleDragStart = useCallback(
-    (event) => {
+    (event: { active: { id: string } }) => {
       const { active } = event;
 
       if (isDragging) return; // Prevent double execution
@@ -1156,10 +1198,9 @@ export default function ProductPageBuilder() {
       }
 
       const confirmRemove = window.confirm(
-        `Are you sure you want to remove Column ${columnIndex + 1}? ${
-          section.columns[columnIndex].components.length > 0
-            ? "Its components will be moved to the first column."
-            : ""
+        `Are you sure you want to remove Column ${columnIndex + 1}? ${section.columns[columnIndex].components.length > 0
+          ? "Its components will be moved to the first column."
+          : ""
         }`
       );
 
@@ -1320,9 +1361,8 @@ export default function ProductPageBuilder() {
       const sectionIndex = newSections.findIndex(
         (s) => s.id === lastColumnSection.id
       );
-      const newColumnId = `column-${lastColumnSection.id}-${
-        lastColumnSection.columns.length + 1
-      }`;
+      const newColumnId = `column-${lastColumnSection.id}-${lastColumnSection.columns.length + 1
+        }`;
 
       newSections[sectionIndex] = {
         ...lastColumnSection,
@@ -1485,9 +1525,19 @@ export default function ProductPageBuilder() {
         : await dispatch(createTemplate(templateData));
       console.log("Template save result:", result);
 
+      setPopup({
+        message: `Template "${templateName}" ${templateId ? "updated" : "saved"} successfully!`,
+        type: "success",
+        isVisible: true,
+      });
       toast.success("Template saved successfully!");
       console.log("Template created:", result.payload);
     } catch (error) {
+      setPopup({
+        message: "Failed to save template. Please try again.",
+        type: "error",
+        isVisible: true,
+      });
       alert("Failed to save template. Please try again.");
     }
   }, [
@@ -1552,9 +1602,8 @@ export default function ProductPageBuilder() {
                 // Process components in this column
                 templateColumn.components.forEach(
                   (templateComponent: TemplateComponent) => {
-                    const componentId = `${
-                      templateComponent.componentType
-                    }-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    const componentId = `${templateComponent.componentType
+                      }-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                     const component: ComponentType = {
                       id: componentId,
                       type: templateComponent.componentType,
@@ -1601,19 +1650,19 @@ export default function ProductPageBuilder() {
   };
 
   // Helper function to get component title
-  const getComponentTitle = (componentType: string): string => {
+  function getComponentTitle(componentType: string): string {
     const titleMap: Record<string, string> = {
       images: "Product Images",
       details: "Product Details",
       description: "Description",
       coupons: "Discount Coupons",
-      frequently_purchased: "Frequently Purchased",
+      frequentlyPurchased: "Frequently Purchased",
       ingredients: "Ingredients",
-      how_to_use: "How to Use",
-      customer_reviews: "Customer Reviews",
+      howToUse: "How to Use",
+      customerReviews: "Customer Reviews",
     };
     return titleMap[componentType] || componentType;
-  };
+  }
 
   useEffect(() => {
     getProductData();
@@ -1621,9 +1670,8 @@ export default function ProductPageBuilder() {
 
   return (
     <div
-      className={`min-h-screen  ${
-        isPreviewMode ? "bg-white" : "bg-gray-100"
-      } flex`}
+      className={`min-h-screen  ${isPreviewMode ? "bg-white" : "bg-gray-100"
+        } flex`}
     >
       {!isPreviewMode && (
         <ComponentLibrary
@@ -1741,11 +1789,10 @@ export default function ProductPageBuilder() {
               )}
               <button
                 onClick={() => setIsPreviewMode(!isPreviewMode)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  isPreviewMode
-                    ? "bg-gray-200 text-gray-800"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isPreviewMode
+                  ? "bg-gray-200 text-gray-800"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+                  }`}
               >
                 <Eye size={20} />
                 {isPreviewMode ? "Edit Mode" : "Preview"}
@@ -1773,8 +1820,8 @@ export default function ProductPageBuilder() {
               items={sections.flatMap((section) =>
                 section.type === "columns"
                   ? section.columns.flatMap((col) =>
-                      col.components.map((c) => c.id)
-                    )
+                    col.components.map((c) => c.id)
+                  )
                   : []
               )}
               strategy={verticalListSortingStrategy}
@@ -1793,13 +1840,11 @@ export default function ProductPageBuilder() {
                       >
                         <div className="w-full">
                           <div
-                            className={`relative ${
-                              isPreviewMode ? "" : "group cursor-pointer"
-                            } ${
-                              selectedComponent?.id === row.component.id
+                            className={`relative ${isPreviewMode ? "" : "group cursor-pointer"
+                              } ${selectedComponent?.id === row.component.id
                                 ? "ring-2 ring-blue-500 rounded-lg"
                                 : ""
-                            }`}
+                              }`}
                             onClick={() =>
                               !isPreviewMode &&
                               setSelectedComponent(row.component)
@@ -1861,9 +1906,8 @@ export default function ProductPageBuilder() {
                           </div>
                         )}
                         <div
-                          className={`flex ${
-                            GAP_CLASSES[columnGap] || "gap-2"
-                          } ${isPreviewMode ? "" : "mb-6"}`}
+                          className={`flex ${GAP_CLASSES[columnGap] || "gap-2"
+                            } ${isPreviewMode ? "" : "mb-6"}`}
                         >
                           {row.sectionColumns.map((column, columnIndex) => (
                             <DroppableColumn
@@ -1900,15 +1944,13 @@ export default function ProductPageBuilder() {
                                   isPreviewMode={isPreviewMode}
                                 >
                                   <div
-                                    className={`relative ${
-                                      isPreviewMode
-                                        ? ""
-                                        : "group cursor-pointer"
-                                    } ${
-                                      selectedComponent?.id === component.id
+                                    className={`relative ${isPreviewMode
+                                      ? ""
+                                      : "group cursor-pointer"
+                                      } ${selectedComponent?.id === component.id
                                         ? "ring-2 ring-blue-500 rounded-lg"
                                         : ""
-                                    }`}
+                                      }`}
                                     onClick={() =>
                                       !isPreviewMode &&
                                       setSelectedComponent(component)
@@ -1928,10 +1970,10 @@ export default function ProductPageBuilder() {
                                         </button>
                                         {selectedComponent?.id ===
                                           component.id && (
-                                          <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-blue-500 text-white text-xs rounded shadow-lg">
-                                            Selected
-                                          </div>
-                                        )}
+                                            <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-blue-500 text-white text-xs rounded shadow-lg">
+                                              Selected
+                                            </div>
+                                          )}
                                       </>
                                     )}
                                     <ComponentRenderer
@@ -1988,6 +2030,12 @@ export default function ProductPageBuilder() {
           </DndContext>
         </div>
       </div>
+      <PopupAlert
+        message={popup.message}
+        type={popup.type}
+        isVisible={popup.isVisible}
+        onClose={() => setPopup({ ...popup, isVisible: false })}
+      />
     </div>
   );
 }

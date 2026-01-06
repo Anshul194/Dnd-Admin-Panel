@@ -17,31 +17,26 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 import {
   setSearchQuery,
   setFilters,
   resetFilters,
-} from "../../store/slices/template";
-import {
   deleteTemplate,
   fetchTemplates,
-  Template as TemplateType,
+  Template,
 } from "../../store/slices/template";
-
-// Using Template type from the slice for typings
-type LocalTemplate = TemplateType;
 
 // Delete Confirmation Modal Component
 const DeleteModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  category: LocalTemplate | null;
+  template: Template | null;
   isDeleting: boolean;
-}> = ({ isOpen, onClose, onConfirm, category, isDeleting }) => {
-  if (!isOpen || !category) return null;
+}> = ({ isOpen, onClose, onConfirm, template, isDeleting }) => {
+  if (!isOpen || !template) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -77,7 +72,7 @@ const DeleteModal: React.FC<{
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Are you sure you want to delete the product{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.layoutName}"
+                "{template.layoutName}"
               </strong>
               ?
             </p>
@@ -126,8 +121,8 @@ const TemplateList: React.FC = () => {
     (state) => state.template
   );
 
-  const [subcategoryToDelete, setSubcategoryToDelete] =
-    useState<LocalTemplate | null>(null);
+  const [templateToDelete, setTemplateToDelete] =
+    useState<Template | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -221,28 +216,28 @@ const TemplateList: React.FC = () => {
     dispatch(resetFilters());
   };
 
-  const openDeleteModal = (template: LocalTemplate) => {
-    setSubcategoryToDelete(template);
+  const openDeleteModal = (template: Template) => {
+    setTemplateToDelete(template);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
-    setSubcategoryToDelete(null);
+    setTemplateToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
 
   const handleDeleteConfirm = async () => {
-    if (subcategoryToDelete) {
+    if (templateToDelete) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
         await dispatch(
-          deleteTemplate(subcategoryToDelete._id as string)
+          deleteTemplate(templateToDelete._id || "")
         ).unwrap();
 
         setPopup({
-          message: `Template "${subcategoryToDelete.layoutName}" deleted successfully`,
+          message: `Template "${templateToDelete.layoutName}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -268,7 +263,7 @@ const TemplateList: React.FC = () => {
 
         // Optional: Show success message
         console.log(
-          `Template "${subcategoryToDelete.layoutName}" deleted successfully`
+          `Template "${templateToDelete.layoutName}" deleted successfully`
         );
       } catch (error) {
         console.error("Failed to delete product:", error);
@@ -488,11 +483,10 @@ const TemplateList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${
-                  pagination.page === page
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                }`}
+                className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${pagination.page === page
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  }`}
               >
                 {page}
               </button>
@@ -523,7 +517,7 @@ const TemplateList: React.FC = () => {
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={subcategoryToDelete}
+        template={templateToDelete}
         isDeleting={isDeleting}
       />
     </div>
