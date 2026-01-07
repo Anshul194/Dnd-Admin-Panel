@@ -7,6 +7,7 @@ import { updateLead, fetchLeadById, clearError } from "../../store/slices/lead";
 import { fetchStaff } from "../../store/slices/staff";
 import { fetchProducts } from "../../store/slices/product";
 import { RootState, AppDispatch } from "../../store";
+import IverLead from "../Ivr/IverLead";
 
 type LeadStatus = "new" | "contacted" | "assigned" | "qualified" | "converted" | "lost";
 type LeadSource = "website" | "newsletter" | "popup" | "referral" | "manual" | "other" | "IVR" | "facebook_lead_ads";
@@ -1048,6 +1049,12 @@ const EditLead: React.FC = () => {
           </form>
         </div>
       </div>
+
+      {id && (
+        <div className="mt-8">
+          <IverLead leadId={id} />
+        </div>
+      )}
 
       <PopupAlert
         message={popup.message}
