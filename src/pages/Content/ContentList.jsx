@@ -304,8 +304,21 @@ const ProfessionalCMS = () => {
   // Helper to handle image preview URLs correctly
   const getPreviewUrl = (path) => {
     if (!path) return "";
-    if (path.startsWith("http") || path.startsWith("data:")) return path;
-    return `${BASE_IMAGE_URL}${path.startsWith("/") ? path.slice(1) : path}`;
+
+    // If it's an object with a url property, use that (matching ecommerce logic)
+    let url = path;
+    if (typeof path === "object" && path.url) {
+      url = path.url;
+    }
+
+    if (typeof url !== "string") return "";
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+
+    const cleanBase = BASE_IMAGE_URL.endsWith("/")
+      ? BASE_IMAGE_URL.slice(0, -1)
+      : BASE_IMAGE_URL;
+    const cleanPath = url.startsWith("/") ? url : `/${url}`;
+    return `${cleanBase}${cleanPath}`;
   };
 
   const handleEdit = (sectionType) => {
@@ -450,11 +463,7 @@ const ProfessionalCMS = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex items-center space-x-3">
                             <img
-                              src={
-                                h.content?.image
-                                  ? `${BASE_IMAGE_URL}${h.content.image}`
-                                  : ""
-                              }
+                              src={getPreviewUrl(h.content?.image)}
                               alt={h.content?.title || `Hero ${idx + 1}`}
                               className="w-20 h-12 object-cover rounded-md border mr-2"
                             />
@@ -1471,7 +1480,7 @@ const ProfessionalCMS = () => {
                       Mobile preview:
                     </div>
                     <img
-                      src={`${BASE_IMAGE_URL}${sections[activeTab][0].content.mobileImage}`}
+                      src={getPreviewUrl(sections[activeTab][0].content.mobileImage)}
                       alt="Mobile preview"
                       className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                     />
