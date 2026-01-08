@@ -18,6 +18,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router-dom";
+import { getImageUrl } from "../../utils/imageHelper";
 import {
   deleteSubcategory,
   fetchSubcategories,
@@ -310,7 +311,7 @@ const SubcategoryList: React.FC = () => {
           typeof err === "string"
             ? err
             : (err as any)?.message || (err as any)?.response?.data?.message ||
-              "Failed to delete category. Please try again.";
+            "Failed to delete category. Please try again.";
         setPopup({
           message: errorMessage,
           type: "error",
@@ -367,7 +368,7 @@ const SubcategoryList: React.FC = () => {
             <span className="px-4 py-2 bg-white dark:bg-gray-800 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
               Total:{" "}
               <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-                {pagination.total ?? pagination.totalDocuments}
+                {pagination.total}
               </span>
             </span>
             <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -468,7 +469,7 @@ const SubcategoryList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <img
-                        src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
+                        src={getImageUrl(cat?.image)}
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src =
@@ -527,8 +528,8 @@ const SubcategoryList: React.FC = () => {
                 key={idx}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded ${pagination.page === page
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
               >
                 {page}

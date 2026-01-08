@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
+import { getImageUrl } from "../../utils/imageHelper";
 
 import { setSearchQuery } from "../../store/slices/categorySlice";
 import { deleteProduct, fetchProducts, setFilters, resetFilters } from "../../store/slices/product";
@@ -455,26 +456,7 @@ const ProductList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <img
-                          src={(() => {
-                            const baseUrl = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
-                            let imagePath = "";
-
-                            if (cat.thumbnail) {
-                              imagePath = typeof cat.thumbnail === "string"
-                                ? cat.thumbnail
-                                : cat.thumbnail.url || "";
-                            } else if (cat.images && cat.images.length > 0) {
-                              const firstImage = cat.images[0];
-                              imagePath = typeof firstImage === "string"
-                                ? firstImage
-                                : firstImage.url || "";
-                            }
-
-                            // If path is already absolute (starts with http), return it as is
-                            if (imagePath.startsWith("http")) return imagePath;
-
-                            return imagePath ? `${baseUrl}${imagePath}` : "";
-                          })()}
+                          src={getImageUrl(cat?.thumbnail || cat?.images?.[0])}
                           onError={(e) => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src =

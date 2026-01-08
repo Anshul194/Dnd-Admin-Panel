@@ -19,6 +19,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { fetchProductById, updateProduct } from "../../store/slices/product";
+import { getImageUrl } from "../../utils/imageHelper";
 import { fetchCategories } from "../../store/slices/categorySlice";
 import { getSubcategoriesByCategory } from "../../store/slices/subCategory";
 import CustomEditor from "../../components/common/TextEditor";
@@ -112,7 +113,7 @@ interface QAItem {
   referenceId?: string;
 }
 
-const Image_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
+
 
 export default function EditProduct() {
   const [activeTab, setActiveTab] = useState(0);
@@ -445,14 +446,7 @@ export default function EditProduct() {
     setProduct({ ...product, precautions: updated });
   };
 
-  const getImageUrl = (image: File | string | null) => {
-    if (typeof image === "string") {
-      return `${Image_URL}/${image}`;
-    } else if (image instanceof File) {
-      return URL.createObjectURL(image);
-    }
-    return "";
-  };
+
 
   const handleSubmit = async () => {
     if (!product.name) {
@@ -1122,21 +1116,13 @@ export default function EditProduct() {
                   <div className="relative group">
                     {product.storyVideoUrl.type === "image/gif" ? (
                       <img
-                        src={
-                          typeof product?.storyVideoUrl === "string"
-                            ? product?.storyVideoUrl
-                            : URL.createObjectURL(product?.storyVideoUrl)
-                        }
+                        src={getImageUrl(product?.storyVideoUrl)}
                         alt="Product Story Preview"
                         className="w-full h-48 object-cover rounded-lg border shadow-sm"
                       />
                     ) : (
                       <video
-                        src={
-                          typeof product?.storyVideoUrl === "string"
-                            ? product?.storyVideoUrl
-                            : URL.createObjectURL(product?.storyVideoUrl)
-                        }
+                        src={getImageUrl(product?.storyVideoUrl)}
                         controls
                         className="w-full h-48 object-cover rounded-lg border shadow-sm"
                       />

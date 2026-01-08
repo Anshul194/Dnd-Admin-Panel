@@ -14,6 +14,7 @@ import {
   updateSubcategory,
 } from "../../store/slices/subCategory";
 import { useParams, useNavigate } from "react-router-dom";
+import { getImageUrl } from "../../utils/imageHelper";
 import axiosInstance from "../../services/axiosConfig";
 
 export default function EditSubcategory() {
@@ -278,13 +279,7 @@ export default function EditSubcategory() {
     getData();
   }, []);
 
-  const getFileUrl = (file: string | File | null) => {
-    if (typeof file === "string") {
-      // Use base URL for string paths
-      return `${IMAGE_BASE_URL}/${file}`;
-    }
-    return file ? URL.createObjectURL(file) : "";
-  };
+  // getImageUrl is now imported from utils
 
   return (
     <div>
@@ -516,7 +511,7 @@ export default function EditSubcategory() {
                       <div className="mt-4 relative group">
                         <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-lg">
                           <img
-                            src={getFileUrl(category.image)}
+                            src={getImageUrl(category.image)}
                             alt="Category Preview"
                             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                           />
@@ -545,7 +540,7 @@ export default function EditSubcategory() {
                       <div className="mt-4 relative group">
                         <div className="overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-lg">
                           <img
-                            src={getFileUrl(category.thumbnail)}
+                            src={getImageUrl(category.thumbnail)}
                             alt="Thumbnail Preview"
                             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                           />

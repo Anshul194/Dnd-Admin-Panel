@@ -28,6 +28,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
+import { getImageUrl } from "../../utils/imageHelper";
 
 interface Category {
   _id: string;
@@ -345,7 +346,7 @@ const CategoryList: React.FC = () => {
           typeof err === "string"
             ? err
             : (err as any)?.message || (err as any)?.response?.data?.message ||
-              "Failed to delete category. Please try again.";
+            "Failed to delete category. Please try again.";
         setPopup({
           message: errorMessage,
           type: "error",
@@ -511,7 +512,7 @@ const CategoryList: React.FC = () => {
                       <td className="px-6 py-5">
                         <div className="relative">
                           <img
-                            src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
+                            src={getImageUrl(cat?.image)}
                             onError={(e) => {
                               e.currentTarget.onerror = null;
                               e.currentTarget.src =
@@ -580,7 +581,7 @@ const CategoryList: React.FC = () => {
               >
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
+                    src={getImageUrl(cat?.image)}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src =
@@ -656,8 +657,8 @@ const CategoryList: React.FC = () => {
                   key={idx}
                   onClick={() => handlePageChange(page)}
                   className={`px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md ${pagination.page === page
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
-                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                     }`}
                 >
                   {page}

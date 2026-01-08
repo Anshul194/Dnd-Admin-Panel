@@ -13,6 +13,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { useParams, useNavigate } from "react-router";
+import { getImageUrl } from "../../utils/imageHelper";
 
 interface SubCategoryInput {
   name: string;
@@ -391,7 +392,7 @@ export default function EditCategory() {
                               category.image instanceof File
                                 ? URL.createObjectURL(category.image)
                                 : typeof category.image === "string"
-                                  ? `${import.meta.env.VITE_IMAGE_URL}/${category?.image}`
+                                  ? getImageUrl(category?.image)
                                   : undefined
                             }
                             alt="Category Preview"
@@ -426,7 +427,7 @@ export default function EditCategory() {
                               category.thumbnail instanceof File
                                 ? URL.createObjectURL(category.thumbnail)
                                 : typeof category.thumbnail === "string"
-                                  ? `${import.meta.env.VITE_IMAGE_URL}/${category?.thumbnail}`
+                                  ? getImageUrl(category?.thumbnail)
                                   : undefined
                             }
                             alt="Thumbnail Preview"

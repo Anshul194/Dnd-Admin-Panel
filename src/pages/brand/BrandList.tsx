@@ -449,7 +449,7 @@ const BrandList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}${cat?.image}`}
+                      src={getImageUrl(cat?.image)}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src =
@@ -506,11 +506,10 @@ const BrandList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
+                className={`px-3 py-1 rounded ${pagination.page === page
                     ? "bg-indigo-500 text-white"
                     : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {page}
               </button>

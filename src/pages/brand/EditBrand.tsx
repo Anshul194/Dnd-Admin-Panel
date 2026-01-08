@@ -12,6 +12,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { useParams, useNavigate } from "react-router-dom";
+import { getImageUrl } from "../../utils/imageHelper";
 
 export default function EditBrand() {
   const [brand, setBrand] = useState({
@@ -287,11 +288,7 @@ export default function EditBrand() {
                 {brand.image && (
                   <div className="mt-2">
                     <img
-                      src={
-                        typeof brand.image === "string"
-                          ? `${import.meta.env.VITE_IMAGE_URL}${brand?.image}`
-                          : URL.createObjectURL(brand.image)
-                      }
+                      src={getImageUrl(brand.image)}
                       alt="Brand Preview"
                       className="max-w-xs h-auto rounded border"
                     />

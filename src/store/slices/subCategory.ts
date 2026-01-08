@@ -9,7 +9,7 @@ export interface Subcategory {
   slug: string;
   description?: string;
   status?: string;
-  parentCategory: string | { _id: string; name?: string }; 
+  parentCategory: string | { _id: string; name?: string };
   image?: string | File;
   thumbnail?: string | File;
   seoTitle?: string;
@@ -18,6 +18,7 @@ export interface Subcategory {
   isFeatured?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  subCategoryCount?: number;
 }
 
 interface FetchSubcategoryParams {
@@ -71,8 +72,8 @@ export const createSubcategory = createAsyncThunk<
     return response.data?.data;
   } catch (err: any) {
     return rejectWithValue(
-      err.response?.data?.body?.message || 
-      err.response?.data?.message || 
+      err.response?.data?.body?.message ||
+      err.response?.data?.message ||
       err.message
     );
   }
