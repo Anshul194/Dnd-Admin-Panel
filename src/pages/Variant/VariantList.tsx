@@ -174,17 +174,24 @@ const VariantList: React.FC = () => {
   // Fetch variants on mount
   useEffect(() => {
     const tenant = "default"; // Replace with actual tenant logic
-    dispatch(fetchVariants({ tenant, productId: selectedProduct }));
+    // Fetch all variants initially (no productId filter) to determine which products have variants
+    dispatch(fetchVariants({ tenant }));
     dispatch(fetchProducts({ tenant }));
-  }, [dispatch, selectedProduct]);
+  }, [dispatch]);
 
   // Update pagination total and totalPages when variants change
-  // Compute filtered variants based on search and local filters
+  // Compute filtered variants based on search, local filters, and selected product
   const filteredVariants = useMemo(() => {
     const list = Array.isArray(variants) ? variants : [];
     const q = searchInput.trim().toLowerCase();
 
     return list.filter((v) => {
+      // Filter by Selected Product
+      if (selectedProduct) {
+        const vPid = typeof v.productId === 'object' ? (v.productId as any)._id : v.productId;
+        if (vPid !== selectedProduct) return false;
+      }
+
       // Search by title or sku
       if (q) {
         const inTitle = v.title?.toLowerCase().includes(q);
@@ -215,7 +222,15 @@ const VariantList: React.FC = () => {
 
       return true;
     });
-  }, [variants, searchInput, localFilters]);
+  }, [variants, searchInput, localFilters, selectedProduct]);
+
+  // Compute products that have at least one variant
+  const productsWithVariants = useMemo(() => {
+    const variantProductIds = new Set(
+      variants.map((v) => typeof v.productId === 'object' ? (v.productId as any)._id : v.productId)
+    );
+    return products.filter((prod) => variantProductIds.has(prod._id));
+  }, [products, variants]);
 
   // Update pagination totals when filtered list or limit changes
   useEffect(() => {
@@ -451,7 +466,7 @@ const VariantList: React.FC = () => {
                 className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium outline-none max-w-[200px]"
               >
                 <option value="">All Products</option>
-                {products.map((prod: any) => (
+                {productsWithVariants.map((prod: any) => (
                   <option key={prod._id} value={prod._id}>
                     {prod.name}
                   </option>
