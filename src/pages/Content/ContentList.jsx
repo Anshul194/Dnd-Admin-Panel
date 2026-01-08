@@ -21,6 +21,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import {
   fetchHomePageContent,
@@ -324,6 +325,18 @@ const ProfessionalCMS = () => {
       setSelectedMobileImage(file);
       handleFormChange();
     }
+  };
+
+  const handleDeleteImage = () => {
+    setSelectedImage(null);
+    setFormData((prev) => ({ ...prev, image: "" }));
+    handleFormChange();
+  };
+
+  const handleDeleteMobileImage = () => {
+    setSelectedMobileImage(null);
+    setFormData((prev) => ({ ...prev, mobileImage: "" }));
+    handleFormChange();
   };
 
   // Hero management: add / edit / delete handlers for multiple hero items
@@ -706,8 +719,8 @@ const ProfessionalCMS = () => {
                     value={
                       formData.countdown?.endDate
                         ? new Date(formData.countdown.endDate)
-                            .toISOString()
-                            .slice(0, 16)
+                          .toISOString()
+                          .slice(0, 16)
                         : ""
                     }
                     onChange={(e) =>
@@ -1239,7 +1252,7 @@ const ProfessionalCMS = () => {
                 />
               </div>
               {(formData.image || selectedImage) && (
-                <div className="mt-2">
+                <div className="mt-2 relative inline-block group">
                   <img
                     src={
                       selectedImage
@@ -1249,20 +1262,36 @@ const ProfessionalCMS = () => {
                     alt="Preview"
                     className="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                   />
+                  <button
+                    onClick={handleDeleteImage}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove Image"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               )}
               {(formData.mobileImage || selectedMobileImage) && (
-                <div className="mt-2">
+                <div className="mt-2 relative inline-block group">
                   <p className="text-xs text-gray-500 mb-1">Mobile preview</p>
-                  <img
-                    src={
-                      selectedMobileImage
-                        ? URL.createObjectURL(selectedMobileImage)
-                        : `${BASE_IMAGE_URL}${formData.mobileImage}`
-                    }
-                    alt="Mobile Preview"
-                    className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-                  />
+                  <div className="relative inline-block">
+                    <img
+                      src={
+                        selectedMobileImage
+                          ? URL.createObjectURL(selectedMobileImage)
+                          : `${BASE_IMAGE_URL}${formData.mobileImage}`
+                      }
+                      alt="Mobile Preview"
+                      className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                    />
+                    <button
+                      onClick={handleDeleteMobileImage}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove Mobile Image"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1301,13 +1330,12 @@ const ProfessionalCMS = () => {
               <button
                 onClick={() => handleSave(sectionType)}
                 disabled={updateLoading || !hasUnsavedChanges}
-                className={`px-6 py-2.5 rounded-lg flex items-center space-x-2 transition-all font-medium shadow-lg disabled:opacity-50 ${
-                  updateLoading
-                    ? "bg-blue-400 text-white cursor-not-allowed"
-                    : hasUnsavedChanges
+                className={`px-6 py-2.5 rounded-lg flex items-center space-x-2 transition-all font-medium shadow-lg disabled:opacity-50 ${updateLoading
+                  ? "bg-blue-400 text-white cursor-not-allowed"
+                  : hasUnsavedChanges
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 dark:from-blue-600 dark:to-indigo-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 {updateLoading ? (
                   <>
@@ -1495,20 +1523,18 @@ const ProfessionalCMS = () => {
                         setSelectedMobileImage(null);
                       }
                     }}
-                    className={`flex min-w-fit items-center space-x-2 px-4 py-3 rounded-t-lg font-medium text-sm transition-all relative ${
-                      isActive
-                        ? "text-blue-600 shadow-sm border-t border-l border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 dark:text-blue-400"
-                        : "text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
-                    }`}
+                    className={`flex min-w-fit items-center space-x-2 px-4 py-3 rounded-t-lg font-medium text-sm transition-all relative ${isActive
+                      ? "text-blue-600 shadow-sm border-t border-l border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 dark:text-blue-400"
+                      : "text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
+                      }`}
                   >
                     <Icon size={16} />
                     <span>{tab.name}</span>
                     {/* Content indicator */}
                     {hasContent && (
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          isActive ? "bg-blue-600" : "bg-green-500"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${isActive ? "bg-blue-600" : "bg-green-500"
+                          }`}
                       ></div>
                     )}
                     {isActive && (
@@ -1546,11 +1572,10 @@ const ProfessionalCMS = () => {
                     handelHomePageLayoutChange(layout);
                   }}
                   disabled={layoutLoading}
-                  className={`relative p-4 border rounded-lg text-left transition-colors text-sm ${
-                    isSelected
-                      ? "border-blue-600 shadow-lg bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 hover:shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 dark:bg-gray-800"
-                  }`}
+                  className={`relative p-4 border rounded-lg text-left transition-colors text-sm ${isSelected
+                    ? "border-blue-600 shadow-lg bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 hover:shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 dark:bg-gray-800"
+                    }`}
                 >
                   <h2 className="text-lg dark:text-white">{layout}</h2>
                   {layoutLoading && (
