@@ -301,6 +301,13 @@ const ProfessionalCMS = () => {
     setHasUnsavedChanges(true);
   };
 
+  // Helper to handle image preview URLs correctly
+  const getPreviewUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http") || path.startsWith("data:")) return path;
+    return `${BASE_IMAGE_URL}${path.startsWith("/") ? path.slice(1) : path}`;
+  };
+
   const handleEdit = (sectionType) => {
     const sectionData = sections[sectionType]?.[0];
     if (sectionData) {
@@ -1228,18 +1235,44 @@ const ProfessionalCMS = () => {
 
           {/* Only show image upload + previews when the section is NOT in excluded list */}
           {!excludedImageSections.includes(sectionType) && (
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
-                <Image size={16} />
-                <span>Upload Image</span>
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
-              />
-              <div className="mt-2">
+            <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
+                  <Image size={16} />
+                  <span>Upload Image</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                />
+              </div>
+
+              {(formData.image || selectedImage) && (
+                <div className="mt-2 relative inline-block group">
+                  <img
+                    src={
+                      selectedImage
+                        ? URL.createObjectURL(selectedImage)
+                        : getPreviewUrl(formData.image)
+                    }
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                  />
+                  {/* Debug info - remove if verified */}
+                  {/* <p className="text-xs text-gray-400 max-w-[200px] break-all">{formData.image}</p> */}
+                  <button
+                    onClick={handleDeleteImage}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove Image"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
                   <Image size={16} />
                   <span>Upload Mobile Image</span>
@@ -1251,26 +1284,7 @@ const ProfessionalCMS = () => {
                   className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                 />
               </div>
-              {(formData.image || selectedImage) && (
-                <div className="mt-2 relative inline-block group">
-                  <img
-                    src={
-                      selectedImage
-                        ? URL.createObjectURL(selectedImage)
-                        : `${BASE_IMAGE_URL}${formData.image}`
-                    }
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-                  />
-                  <button
-                    onClick={handleDeleteImage}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove Image"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              )}
+
               {(formData.mobileImage || selectedMobileImage) && (
                 <div className="mt-2 relative inline-block group">
                   <p className="text-xs text-gray-500 mb-1">Mobile preview</p>
@@ -1279,11 +1293,12 @@ const ProfessionalCMS = () => {
                       src={
                         selectedMobileImage
                           ? URL.createObjectURL(selectedMobileImage)
-                          : `${BASE_IMAGE_URL}${formData.mobileImage}`
+                          : getPreviewUrl(formData.mobileImage)
                       }
                       alt="Mobile Preview"
                       className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                     />
+                    {/* <p className="text-xs text-gray-400 max-w-[200px] break-all">{formData.mobileImage}</p> */}
                     <button
                       onClick={handleDeleteMobileImage}
                       className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
