@@ -613,13 +613,40 @@ export default function AddProduct() {
     formData.append("isAddon", product.showInAddons);
 
     try {
+      console.log("handleSubmit: submitting product", { name: product.name, category: product.category });
       const response = await dispatch(createProduct(formData)).unwrap();
-      console.log("Product created successfully: >>> ", response);
-      const createdProductId = response?.product?.data?._id;
+      console.log("Product create response: >>> ", response);
+      // Dump FormData for debugging (may include File objects)
+      try {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const pair of formData.entries()) {
+          // eslint-disable-next-line no-console
+          console.log("formData:", pair[0], pair[1]);
+        }
+      } catch (fdErr) {
+        // eslint-disable-next-line no-console
+        console.warn("Unable to iterate FormData entries", fdErr);
+      }
+
+      const createdProductId =
+        response?.product?.data?._id || response?.data?._id || response?._id;
 
       setProductId(createdProductId);
 
-      const isSuccess = response?.success || !!createdProductId;
+      const isSuccess = response?.success ?? Boolean(createdProductId);
+
+      if (!isSuccess) {
+        const serverMessage =
+          response?.message || response?.data?.message || response?.msg || "Failed to create product. Please try again.";
+        // eslint-disable-next-line no-console
+        console.warn("createProduct returned unsuccessful response:", response, "message:", serverMessage);
+        setPopup({
+          isVisible: true,
+          message: serverMessage,
+          type: "error",
+        });
+        return;
+      }
 
       if (isSuccess && createdProductId) {
         // FAQ integration: create FAQ for each item in product.qa
@@ -693,9 +720,19 @@ export default function AddProduct() {
         });
       }
     } catch (err: any) {
+      console?.error("Error creating product:", err);
+      const serverMessage =
+        err?.message ||
+        err?.payload?.message ||
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        (typeof err === "string" ? err : null) ||
+        "Failed to create product. Please try again.";
+      // eslint-disable-next-line no-console
+      console.error("createProduct threw error:", err, "extracted message:", serverMessage);
       setPopup({
         isVisible: true,
-        message: "Failed to create product. Please try again.",
+        message: serverMessage,
         type: "error",
       });
     }
@@ -1972,6 +2009,7 @@ export default function AddProduct() {
       {/* Popup Alert */}
       {popup.isVisible && (
         <PopupAlert
+          isVisible={popup.isVisible}
           message={popup.message}
           type={popup.type}
           onClose={() => setPopup({ ...popup, isVisible: false })}
