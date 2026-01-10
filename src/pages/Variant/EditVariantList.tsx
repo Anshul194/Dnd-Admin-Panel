@@ -14,7 +14,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { ArrowLeft, Plus, X, Upload, Trash2, Sparkles } from "lucide-react";
 import axiosInstance from "../../services/axiosConfig";
 
-const Image_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
+import { getImageUrl } from "../../utils/imageHelper";
 
 interface Variant {
   _id: string;
@@ -104,9 +104,9 @@ const EditVariantList = () => {
           attributes:
             foundVariant.attributes.length > 0
               ? foundVariant.attributes.map((attr) => ({
-                  attributeId: attr.attributeId,
-                  value: attr.value,
-                }))
+                attributeId: attr.attributeId,
+                value: attr.value,
+              }))
               : [{ attributeId: "", value: "" }],
         });
       } else {
@@ -149,14 +149,7 @@ const EditVariantList = () => {
     setVariant({ ...variant, existingImages: updatedExistingImages });
   };
 
-  const getImageUrl = (image: File | string | null) => {
-    if (typeof image === "string") {
-      return `${Image_URL}/${image}`;
-    } else if (image instanceof File) {
-      return URL.createObjectURL(image);
-    }
-    return "";
-  };
+
   const handleRemoveImage = async (image, index) => {
     try {
       console.log("Removing image:", image);

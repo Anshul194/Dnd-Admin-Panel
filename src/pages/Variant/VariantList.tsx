@@ -23,6 +23,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 import { fetchVariants, deleteAttribute, fetchProducts } from "../../store/slices/variant";
+import { getImageUrl } from "../../utils/imageHelper";
 
 interface Variant {
   _id: string;
@@ -593,18 +594,21 @@ const VariantList: React.FC = () => {
                           <div className="relative">
                             <img
                               src={
-                                variant.images && variant.images[0]
-                                  ? `${import.meta.env.VITE_IMAGE_URL}/${variant.images[0]}`
-                                  : "https://www.redecredauto.com.br/portal/assets/images/default.jpg"
+                                variant.images?.length > 0 && variant.images[0]
+                                  ? getImageUrl(variant.images[0])
+                                  : "https://placehold.co/100x100?text=No+Image"
                               }
                               onError={(e) => {
+                                console.log("Image load error for:", variant.images?.[0]);
                                 e.currentTarget.onerror = null;
-                                e.currentTarget.src = "https://www.redecredauto.com.br/portal/assets/images/default.jpg";
+                                e.currentTarget.src = "https://placehold.co/100x100?text=No+Image";
                               }}
                               alt={variant.title}
                               className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 dark:border-gray-700"
                               onClick={() => {
                                 console.log("Variant image clicked:", variant);
+                                console.log("Raw image URL:", variant.images[0]);
+                                console.log("Processed image URL:", getImageUrl(variant.images[0]));
                               }}
                             />
 
