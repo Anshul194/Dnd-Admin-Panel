@@ -17,6 +17,7 @@ import {
   Check,
   ChevronDown,
   FileText,
+  PhoneCall,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -32,6 +33,7 @@ import { fetchStaff } from "../../store/slices/staff";
 import { Lead } from "../../store/slices/lead";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
+import { initiateCall } from "../../services/callService";
 
 // Helper function for status badges
 const getStatusBadge = (status: string) => {
@@ -381,6 +383,7 @@ const LeadList: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [initiatingCall, setInitiatingCall] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
@@ -701,6 +704,43 @@ const LeadList: React.FC = () => {
   const handleStaffSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStaffSearchTerm(e.target.value);
     setShowStaffDropdown(true);
+  };
+
+  const handleInitiateCall = async (leadId: string) => {
+    if (!leadId) {
+      toast.error("Lead ID is required to initiate a call");
+      return;
+    }
+
+    setInitiatingCall(leadId);
+    try {
+      // Get current user to ensure call connects to them
+      let agentId = undefined;
+      let agentNumber = undefined;
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          agentId = user._id || user.id;
+          // Fallback to user-provided number if missing in profile
+          agentNumber = user.phone || user.phoneNumber || user.mobile || "9824853820";
+        } else {
+          // Fallback even if no user found (though unlikely for logged in app)
+         
+        }
+      } catch (e) {
+        console.warn("Could not retrieve current user for call initiation", e);
+       
+      }
+
+      const response = await initiateCall(leadId, agentId, agentNumber);
+      toast.success(response.message || "Call initiated successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to initiate call");
+      console.error("Error initiating call:", error);
+    } finally {
+      setInitiatingCall(null);
+    }
   };
 
   const generatePageNumbers = () => {
@@ -1058,6 +1098,18 @@ const LeadList: React.FC = () => {
                             title="View Notes"
                           >
                             <FileText className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleInitiateCall(lead._id)}
+                            className="text-green-500 hover:text-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Initiate Call"
+                            disabled={initiatingCall === lead._id}
+                          >
+                            {initiatingCall === lead._id ? (
+                              <div className="w-5 h-5 border-2 border-green-300 border-t-green-600 rounded-full animate-spin"></div>
+                            ) : (
+                              <PhoneCall className="h-5 w-5" />
+                            )}
                           </button>
                           <button
                             onClick={() => openDeleteModal(lead)}
