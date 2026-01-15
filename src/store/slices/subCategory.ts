@@ -107,16 +107,19 @@ export const fetchSubcategories = createAsyncThunk<
     const response = await axiosInstance.get(
       `/subcategory?${queryParams.toString()}`
     );
-    console.log("Fetched subcategories:", response.data);
-    const data = response.data?.data;
+    console.log("subCategorySlice.fetchSubcategories - Raw response:", response.data);
+
+    // Backend returns result.body which is { success: true, message: "...", data: { result: [...], ... } }
+    const apiData = response.data?.data || response.data?.body?.data || response.data;
+    const data = apiData?.result ? apiData : (apiData?.data || apiData);
 
     return {
-      subcategories: data?.result || [],
+      subcategories: data?.result || (Array.isArray(data) ? data : []),
       pagination: {
-        total: data?.totalDocuments || 0,
-        page: data?.currentPage || 1,
+        total: data?.totalDocuments ?? data?.total ?? (Array.isArray(data) ? data.length : 0),
+        page: data?.currentPage ?? data?.page ?? 1,
         limit,
-        totalPages: data?.totalPages || 0,
+        totalPages: data?.totalPages ?? 0,
       },
     };
   } catch (err: any) {

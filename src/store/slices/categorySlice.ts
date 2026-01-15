@@ -66,8 +66,8 @@ export const createCategory = createAsyncThunk<Category, Partial<Category>>(
       return response.data?.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.body?.message || 
-        err.response?.data?.message || 
+        err.response?.data?.body?.message ||
+        err.response?.data?.message ||
         err.message
       );
     }
@@ -104,13 +104,17 @@ export const fetchCategories = createAsyncThunk<
     const response = await axiosInstance.get(
       `/category?${queryParams.toString()}`
     );
-    console.log("Response from fetchCategories:", response.data);
-    const data = response.data?.data?.body?.data;
+    console.log("categorySlice.fetchCategories - Raw response:", response.data);
+
+    // Backend returns result.body which is { success: true, message: "...", data: { result: [...], ... } }
+    // We handle potential nesting from axiosConfig or other middleware
+    const apiData = response.data?.data || response.data?.body?.data || response.data;
+    const data = apiData?.result ? apiData : (apiData?.data || apiData);
 
     return {
-      categories: data?.result || [],
+      categories: data?.result || (Array.isArray(data) ? data : []),
       pagination: {
-        total: data?.totalDocuments ?? data?.total ?? 0,
+        total: data?.totalDocuments ?? data?.total ?? (Array.isArray(data) ? data.length : 0),
         totalDocuments: data?.totalDocuments ?? 0,
         page: data?.currentPage ?? data?.page ?? 1,
         limit: limit,
