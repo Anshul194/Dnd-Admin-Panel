@@ -461,9 +461,9 @@ const variantSlice = createSlice({
       })
       .addCase(updateVariant.fulfilled, (state, action) => {
         state.loading = false;
-        // Use action.payload.data for the updated variant
-        const updatedVariant = action.payload?.data;
-        if (updatedVariant) {
+        // The thunk returns response.data.data which IS the variant object
+        const updatedVariant = action.payload;
+        if (updatedVariant && updatedVariant._id) {
           const index = state.variants.findIndex(
             (v) => v._id === updatedVariant._id
           );

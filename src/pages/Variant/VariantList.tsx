@@ -187,6 +187,8 @@ const VariantList: React.FC = () => {
     const q = searchInput.trim().toLowerCase();
 
     return list.filter((v) => {
+      if (!v) return false;
+
       // Filter by Selected Product
       if (selectedProduct) {
         const vPid = typeof v.productId === 'object' ? (v.productId as any)._id : v.productId;
