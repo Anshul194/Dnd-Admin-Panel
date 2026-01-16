@@ -517,9 +517,14 @@ export default function EditProduct() {
       formData.append(`highlights[${index}]`, highlight);
     });
 
-    product.attributeSet.forEach((attributeId, index) => {
-      formData.append(`attributeSet[${index}].attributeId`, attributeId);
-    });
+    if (product.attributeSet.length === 0) {
+      // Send a dummy value to ensure the key exists, backend will filter it out
+      formData.append(`attributeSet[0].attributeId`, "");
+    } else {
+      product.attributeSet.forEach((attributeId, index) => {
+        formData.append(`attributeSet[${index}].attributeId`, attributeId);
+      });
+    }
 
     product.ingredients.forEach((ing, index) => {
       formData.append(`ingredients[${index}].name`, ing.name);
