@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800;900&display=swap") layer(base);
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap");
 
 @import "tailwindcss";
 
@@ -7,6 +7,13 @@
 @theme {
   --font-*: initial;
   --font-orbitron: "Orbitron", sans-serif;
+  --font-manrope: "Manrope", sans-serif;
+  
+  --color-veda-primary: #13ec5b;
+  --color-veda-background-light: #f6f8f6;
+  --color-veda-background-dark: #102216;
+  --color-veda-text-dark: #0d1b12;
+  --color-veda-text-secondary: #4c9a66;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;

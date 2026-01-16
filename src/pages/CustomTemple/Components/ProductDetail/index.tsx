@@ -235,6 +235,7 @@ export function ProductDetails({
       case "ecommerce":
         return <Variant4 productData={productData} />;
       case "detailed":
+      case "ayurvedic":
         return (
           <Variant5 productData={productData} detailSettings={detailSettings} />
         );

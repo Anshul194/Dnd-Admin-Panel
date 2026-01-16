@@ -41,6 +41,10 @@ import {
   Gift,
   ArrowLeft,
   PlayCircle,
+  HelpCircle,
+  Users,
+  Heart,
+  BarChart3,
 } from "lucide-react";
 import { useAppDispatch } from "../../hooks/redux";
 import {
@@ -397,6 +401,26 @@ function ComponentLibrary({
       type: COMPONENT_TYPES.CUSTOMER_REVIEWS,
       title: "Customer Reviews",
       icon: Star,
+    },
+    {
+      type: COMPONENT_TYPES.FAQ,
+      title: "FAQ",
+      icon: HelpCircle,
+    },
+    {
+      type: COMPONENT_TYPES.TARGET_AUDIENCE,
+      title: "Target Audience",
+      icon: Users,
+    },
+    {
+      type: COMPONENT_TYPES.BENEFITS,
+      title: "Benefits",
+      icon: Heart,
+    },
+    {
+      type: COMPONENT_TYPES.COMPARISON,
+      title: "Comparison",
+      icon: BarChart3,
     },
   ];
 

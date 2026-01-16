@@ -2,6 +2,7 @@ import { BookOpen } from "lucide-react";
 import RenderScrollingVariant from "./Variant1";
 import ModernIngredientsUI from "./Variant2";
 import PremiumIngredientsUI from "./Variant3";
+import AyurvedicIngredientsUI from "./Variant4";
 
 export function Ingredients({
   component,
@@ -82,6 +83,8 @@ export function Ingredients({
 
         case "premium":
           return <PremiumIngredientsUI data={ingredients} />;
+        case "ayurvedic":
+          return <AyurvedicIngredientsUI productData={product} />;
       default:
         return <RenderScrollingVariant data={ingredients} />;
     }

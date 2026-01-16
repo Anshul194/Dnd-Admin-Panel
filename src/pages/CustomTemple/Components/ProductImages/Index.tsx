@@ -3,6 +3,7 @@ import RenderVariant1 from "./Variant1";
 import RenderVariant2 from "./Variant2";
 import RenderVariant3 from "./Variant3";
 import RenderVariant4 from "./Variant4";
+import RenderVariant5 from "./Variant5";
 
 export function ProductImages({
   component,
@@ -73,6 +74,8 @@ export function ProductImages({
         return <RenderVariant3 productData={productData} />;
       case "variant4":
         return <RenderVariant4 productData={productData} imageSettings={imageSettings} />;
+      case "ayurvedic":
+        return <RenderVariant5 productData={productData} />;
       default:
         return <RenderVariant1 productData={productData} />;
     }

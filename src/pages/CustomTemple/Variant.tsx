@@ -7,6 +7,10 @@ export const COMPONENT_TYPES = {
   COUPONS: "coupons",
   HOW_TO_USE: "howToUse",
   CUSTOMER_REVIEWS: "customerReviews",
+  FAQ: "faq",
+  TARGET_AUDIENCE: "targetAudience",
+  BENEFITS: "benefits",
+  COMPARISON: "comparison",
 };
 
 export const COMPONENT_VARIANTS = {
@@ -26,6 +30,10 @@ export const COMPONENT_VARIANTS = {
     variant4: {
       label: "Premium",
       description: "Premium showcase with detailed view",
+    },
+    ayurvedic: {
+      label: "Ayurvedic",
+      description: "Hero image with gradient background and floating badge",
     },
   },
   [COMPONENT_TYPES.DETAILS]: {
@@ -48,6 +56,10 @@ export const COMPONENT_VARIANTS = {
     detailed: {
       label: "Detailed",
       description: "Comprehensive detailed view with all information",
+    },
+    ayurvedic: {
+      label: "Ayurvedic",
+      description: "Hero details with pricing packs and certifications",
     },
   },
   [COMPONENT_TYPES.DESCRIPTION]: {
@@ -83,6 +95,10 @@ export const COMPONENT_VARIANTS = {
       label: "Premium",
       description: "Luxury ingredient presentation",
     },
+    ayurvedic: {
+      label: "Ayurvedic",
+      description: "Table layout with ingredient images and benefits",
+    },
   },
   [COMPONENT_TYPES.COUPONS]: {
     slider: {
@@ -111,6 +127,10 @@ export const COMPONENT_VARIANTS = {
       label: "Detailed",
       description: "Enhanced layout with rich descriptions",
     },
+    ayurvedic: {
+      label: "Ayurvedic",
+      description: "Video with 3-step process and storage info",
+    },
   },
   [COMPONENT_TYPES.CUSTOMER_REVIEWS]: {
     cards: {
@@ -125,6 +145,34 @@ export const COMPONENT_VARIANTS = {
       label: "Testimonial",
       description: "Featured testimonial style layout",
     },
+    ayurvedic: {
+      label: "Ayurvedic",
+      description: "Card-based testimonials with verified badges",
+    },
+  },
+  [COMPONENT_TYPES.FAQ]: {
+    accordion: {
+      label: "Accordion",
+      description: "Expandable FAQ items with smooth animations",
+    },
+  },
+  [COMPONENT_TYPES.TARGET_AUDIENCE]: {
+    split: {
+      label: "Split",
+      description: "Two-column layout showing ideal users vs. cautions",
+    },
+  },
+  [COMPONENT_TYPES.BENEFITS]: {
+    ayurvedic: {
+      label: "Ayurvedic",
+      description: "Alternating layout with detailed benefit cards",
+    },
+  },
+  [COMPONENT_TYPES.COMPARISON]: {
+    table: {
+      label: "Table",
+      description: "Feature comparison table with competitor analysis",
+    },
   },
 };
 
@@ -136,6 +184,10 @@ import { ProductDetails } from "./Components/ProductDetail";
 import { Description } from "./Components/description";
 import { HowToUse } from "./Components/HowToUse";
 import { Coupons } from "./Components/coupons";
+import { FAQ } from "./Components/FAQ";
+import { TargetAudience } from "./Components/TargetAudience";
+import { Benefits } from "./Components/Benefits";
+import { Comparison } from "./Components/Comparison";
 
 export function ComponentRenderer({
   component,
@@ -186,6 +238,14 @@ export function ComponentRenderer({
       return <HowToUse {...commonProps} />;
     case COMPONENT_TYPES.CUSTOMER_REVIEWS:
       return <CustomerReviews {...commonProps} />;
+    case COMPONENT_TYPES.FAQ:
+      return <FAQ {...commonProps} />;
+    case COMPONENT_TYPES.TARGET_AUDIENCE:
+      return <TargetAudience {...commonProps} />;
+    case COMPONENT_TYPES.BENEFITS:
+      return <Benefits {...commonProps} />;
+    case COMPONENT_TYPES.COMPARISON:
+      return <Comparison {...commonProps} />;
     default:
       return null;
   }
