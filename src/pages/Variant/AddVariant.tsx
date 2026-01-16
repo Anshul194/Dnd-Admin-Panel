@@ -350,6 +350,11 @@ export default function AddVariant() {
   };
 
   const getAttributeOptions = async () => {
+    if (!variant.productId) {
+      setAttributesList([]);
+      return;
+    }
+
     try {
       const response = await axiosInstance.get(
         `/product/attribute/${variant.productId}`,
@@ -357,20 +362,39 @@ export default function AddVariant() {
           headers: { "Content-Type": "application/json" },
         }
       );
-      setAttributesList(response.data.data);
-      console.log("Fetched attributes: ===>", response.data);
-    } catch (error) {
-      console.error("Failed to fetch attributes:", error);
-      // setPopup({
-      //   isVisible: true,
-      //   message: "Failed to fetch attributes. Please try again.",
-      //   type: "error",
-      // });
+
+      // Handle response structure: { success: true, message: "...", data: [...] }
+      // Or nested: { success: true, message: "...", data: { status: 200, body: { success: true, data: [...] } } }
+      let attributesData = response.data?.data;
+      
+      // Handle nested structure
+      if (attributesData?.body?.data) {
+        attributesData = attributesData.body.data;
+      } else if (attributesData?.data) {
+        attributesData = attributesData.data;
+      }
+
+      // Ensure it's an array
+      const attributesArray = Array.isArray(attributesData) ? attributesData : [];
+      setAttributesList(attributesArray);
+    } catch (error: any) {
+      // Handle 404 gracefully - it means no attributes exist for this product
+      if (error?.response?.status === 404) {
+        setAttributesList([]);
+      } else {
+        console.error("Failed to fetch attributes:", error);
+        setAttributesList([]);
+      }
     }
   };
 
   useEffect(() => {
-    getAttributeOptions();
+    if (variant.productId) {
+      getAttributeOptions();
+    } else {
+      setAttributesList([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variant.productId]);
 
   return (
@@ -567,11 +591,17 @@ export default function AddVariant() {
                         className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 transition-all duration-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-gray-700 dark:bg-gray-800/50 dark:text-white"
                       >
                         <option value="">Select Attribute</option>
-                        {attributesList.map((attribute) => (
-                          <option key={attribute._id} value={attribute._id}>
-                            {attribute.name}
+                        {Array.isArray(attributesList) && attributesList.length > 0 ? (
+                          attributesList.map((attribute) => (
+                            <option key={attribute._id} value={attribute._id}>
+                              {attribute.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>
+                            {variant.productId ? "No attributes available for this product" : "Select a product first"}
                           </option>
-                        ))}
+                        )}
                       </select>
                       <input
                         type="text"
