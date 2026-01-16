@@ -107,16 +107,34 @@ export const fetchSubcategories = createAsyncThunk<
     const response = await axiosInstance.get(
       `/subcategory?${queryParams.toString()}`
     );
-    console.log("Fetched subcategories:", response.data);
-    const data = response.data?.data;
+
+    // Backend response structure can be:
+    // Case 1: { success: true, message: "...", data: { result: [...], currentPage, totalPages, totalDocuments } }
+    // Case 2: { success: true, message: "...", data: { status: 200, body: { success: true, message: "...", data: { result: [...], ... } } } }
+    
+    // Try to extract the actual data object
+    let data = response.data?.data;
+    
+    // Handle nested structure: data might be { status: 200, body: { success: true, message: "...", data: {...} } }
+    if (data?.body?.data) {
+      // Nested structure: extract from body.data
+      data = data.body.data;
+    } else if (data?.data && data?.data?.result) {
+      // Another nested level
+      data = data.data;
+    }
+
+    // Extract subcategories array - the repository returns { result: [...], currentPage, totalPages, totalDocuments }
+    const subcategoriesArray: Subcategory[] = Array.isArray(data?.result) ? data.result : [];
 
     return {
-      subcategories: data?.result || [],
+      subcategories: subcategoriesArray,
       pagination: {
-        total: data?.totalDocuments || 0,
-        page: data?.currentPage || 1,
+        total: data?.totalDocuments ?? data?.total ?? subcategoriesArray.length,
+        totalDocuments: data?.totalDocuments ?? subcategoriesArray.length,
+        page: data?.currentPage ?? data?.page ?? 1,
         limit,
-        totalPages: data?.totalPages || 0,
+        totalPages: data?.totalPages ?? Math.ceil((data?.totalDocuments ?? data?.total ?? subcategoriesArray.length) / limit),
       },
     };
   } catch (err: any) {
@@ -208,12 +226,21 @@ const subcategorySlice = createSlice({
       })
       .addCase(fetchSubcategories.fulfilled, (state, action) => {
         state.loading = false;
+        
+        // Ensure subcategories is an array
+        const subcategoriesArray = Array.isArray(action.payload.subcategories) 
+          ? action.payload.subcategories 
+          : [];
+        
         // Sort subcategories by createdAt in descending order (newest first)
-        const sortedSubcategories = [...action.payload.subcategories].sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
-          return dateB - dateA; // Descending order (newest first)
-        });
+        const sortedSubcategories = subcategoriesArray.length > 0
+          ? [...subcategoriesArray].sort((a, b) => {
+              const dateA = new Date(a.createdAt || 0).getTime();
+              const dateB = new Date(b.createdAt || 0).getTime();
+              return dateB - dateA; // Descending order (newest first)
+            })
+          : [];
+        
         state.subcategories = sortedSubcategories;
         state.pagination = action.payload.pagination;
       })

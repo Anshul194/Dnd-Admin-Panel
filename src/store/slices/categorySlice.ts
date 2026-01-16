@@ -66,8 +66,8 @@ export const createCategory = createAsyncThunk<Category, Partial<Category>>(
       return response.data?.data;
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.body?.message || 
-        err.response?.data?.message || 
+        err.response?.data?.body?.message ||
+        err.response?.data?.message ||
         err.message
       );
     }
@@ -104,17 +104,34 @@ export const fetchCategories = createAsyncThunk<
     const response = await axiosInstance.get(
       `/category?${queryParams.toString()}`
     );
-    console.log("Response from fetchCategories:", response.data);
-    const data = response.data?.data?.body?.data;
+
+    // Backend response structure can be:
+    // Case 1: { success: true, message: "...", data: { result: [...], currentPage, totalPages, totalDocuments } }
+    // Case 2: { success: true, message: "...", data: { status: 200, body: { success: true, message: "...", data: { result: [...], ... } } } }
+    
+    // Try to extract the actual data object
+    let data = response.data?.data;
+    
+    // Handle nested structure: data might be { status: 200, body: { success: true, message: "...", data: {...} } }
+    if (data?.body?.data) {
+      // Nested structure: extract from body.data
+      data = data.body.data;
+    } else if (data?.data && data?.data?.result) {
+      // Another nested level
+      data = data.data;
+    }
+
+    // Extract categories array - the repository returns { result: [...], currentPage, totalPages, totalDocuments }
+    const categoriesArray: Category[] = Array.isArray(data?.result) ? data.result : [];
 
     return {
-      categories: data?.result || [],
+      categories: categoriesArray,
       pagination: {
-        total: data?.totalDocuments ?? data?.total ?? 0,
-        totalDocuments: data?.totalDocuments ?? 0,
+        total: data?.totalDocuments ?? data?.total ?? categoriesArray.length,
+        totalDocuments: data?.totalDocuments ?? categoriesArray.length,
         page: data?.currentPage ?? data?.page ?? 1,
         limit: limit,
-        totalPages: data?.totalPages ?? 0,
+        totalPages: data?.totalPages ?? Math.ceil((data?.totalDocuments ?? data?.total ?? categoriesArray.length) / limit),
       },
     };
   } catch (err: any) {
@@ -201,12 +218,21 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
+        
+        // Ensure categories is an array
+        const categoriesArray = Array.isArray(action.payload.categories) 
+          ? action.payload.categories 
+          : [];
+        
         // Sort categories by createdAt in descending order (newest first)
-        const sortedCategories = [...action.payload.categories].sort((a, b) => {
-          const dateA = new Date(a.createdAt).getTime();
-          const dateB = new Date(b.createdAt).getTime();
-          return dateB - dateA; // Descending order (newest first)
-        });
+        const sortedCategories = categoriesArray.length > 0
+          ? [...categoriesArray].sort((a, b) => {
+              const dateA = new Date(a.createdAt || 0).getTime();
+              const dateB = new Date(b.createdAt || 0).getTime();
+              return dateB - dateA; // Descending order (newest first)
+            })
+          : [];
+        
         state.categories = sortedCategories;
         state.pagination = action.payload.pagination;
       })
