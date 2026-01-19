@@ -17,6 +17,7 @@ import {
   Info,
   Layout,
   HelpCircle,
+  Users,
 } from "lucide-react";
 import { fetchProductById, updateProduct } from "../../store/slices/product";
 import { getImageUrl } from "../../utils/imageHelper";
@@ -77,6 +78,11 @@ interface Precaution {
   alt?: string;
 }
 
+interface TargetAudience {
+  idealFor: string[];
+  consultDoctor: string[];
+}
+
 interface ProductState {
   name: string;
   description: string;
@@ -99,6 +105,7 @@ interface ProductState {
   benefits: Benefit[];
   precautions: Precaution[];
   searchKeywords: string[];
+  targetAudience: TargetAudience;
 }
 
 // Add QAItem interface for FAQ tab
@@ -141,6 +148,10 @@ export default function EditProduct() {
     benefits: [{ title: "", description: "", image: null, alt: "" }],
     precautions: [{ title: "", description: "", image: null, alt: "" }],
     searchKeywords: [""],
+    targetAudience: {
+      idealFor: [""],
+      consultDoctor: [""],
+    },
     custom_template: false,
     templateId: "",
     storyVideoUrl: "",
@@ -159,8 +170,9 @@ export default function EditProduct() {
     { id: 7, name: "Keywords", icon: Search, color: "bg-pink-500" },
     { id: 8, name: "Benefits", icon: Heart, color: "bg-red-500" },
     { id: 9, name: "Precautions", icon: ShieldAlert, color: "bg-gray-500" },
-    { id: 10, name: "Template", icon: Layout, color: "bg-indigo-500" },
-    { id: 11, name: "FAQ", icon: HelpCircle, color: "bg-gray-500" },
+    { id: 10, name: "Target Audience", icon: Users, color: "bg-cyan-500" },
+    { id: 11, name: "Template", icon: Layout, color: "bg-indigo-500" },
+    { id: 12, name: "FAQ", icon: HelpCircle, color: "bg-gray-500" },
   ];
 
   // global alerts are dispatched via redux showAlert
@@ -446,6 +458,76 @@ export default function EditProduct() {
     setProduct({ ...product, precautions: updated });
   };
 
+  // Target Audience handlers
+  const addIdealFor = () => {
+    setProduct({
+      ...product,
+      targetAudience: {
+        ...product.targetAudience,
+        idealFor: [...product.targetAudience.idealFor, ""],
+      },
+    });
+  };
+
+  const removeIdealFor = (index: number) => {
+    if (product.targetAudience.idealFor.length > 1) {
+      setProduct({
+        ...product,
+        targetAudience: {
+          ...product.targetAudience,
+          idealFor: product.targetAudience.idealFor.filter((_, i) => i !== index),
+        },
+      });
+    }
+  };
+
+  const updateIdealFor = (index: number, value: string) => {
+    setProduct({
+      ...product,
+      targetAudience: {
+        ...product.targetAudience,
+        idealFor: product.targetAudience.idealFor.map((item, i) =>
+          i === index ? value : item
+        ),
+      },
+    });
+  };
+
+  const addConsultDoctor = () => {
+    setProduct({
+      ...product,
+      targetAudience: {
+        ...product.targetAudience,
+        consultDoctor: [...product.targetAudience.consultDoctor, ""],
+      },
+    });
+  };
+
+  const removeConsultDoctor = (index: number) => {
+    if (product.targetAudience.consultDoctor.length > 1) {
+      setProduct({
+        ...product,
+        targetAudience: {
+          ...product.targetAudience,
+          consultDoctor: product.targetAudience.consultDoctor.filter(
+            (_, i) => i !== index
+          ),
+        },
+      });
+    }
+  };
+
+  const updateConsultDoctor = (index: number, value: string) => {
+    setProduct({
+      ...product,
+      targetAudience: {
+        ...product.targetAudience,
+        consultDoctor: product.targetAudience.consultDoctor.map((item, i) =>
+          i === index ? value : item
+        ),
+      },
+    });
+  };
 
 
   const handleSubmit = async () => {
@@ -565,6 +647,15 @@ export default function EditProduct() {
       }
       formData.append(`precautions[${index}].alt`, p.alt);
     });
+
+    // Add target audience
+    product.targetAudience.idealFor.forEach((item, index) => {
+      formData.append(`targetAudience.idealFor[${index}]`, item);
+    });
+    product.targetAudience.consultDoctor.forEach((item, index) => {
+      formData.append(`targetAudience.consultDoctor[${index}]`, item);
+    });
+
     if (product.custom_template) {
       formData.append("custom_template", "true");
       formData.append("templateId", product.templateId);
@@ -683,6 +774,10 @@ export default function EditProduct() {
           alt: p.image?.alt || "",
         })) || [{ title: "", description: "", image: null, alt: "" }],
         searchKeywords: data.searchKeywords || [""],
+        targetAudience: {
+          idealFor: data.targetAudience?.idealFor || [""],
+          consultDoctor: data.targetAudience?.consultDoctor || [""],
+        },
         custom_template: data.custom_template || false,
         templateId: data.templateId || "",
         showInAddons: data.isAddon || false,
@@ -1892,6 +1987,104 @@ export default function EditProduct() {
 
       case 10:
         return (
+          <div className="space-y-8">
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 p-6 rounded-xl border border-cyan-200 dark:border-cyan-800">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                Target Audience
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Define who this product is perfect for and when to consult a doctor
+              </p>
+            </div>
+
+            {/* Perfect for you if... */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-lg font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <span className="text-2xl">✓</span>
+                  Perfect for you if...
+                </label>
+                <button
+                  type="button"
+                  onClick={addIdealFor}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Plus size={16} />
+                  Add Item
+                </button>
+              </div>
+              {product.targetAudience.idealFor.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex gap-3 items-start p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                >
+                  <span className="text-green-600 dark:text-green-400 mt-2 text-xl font-bold">
+                    ✓
+                  </span>
+                  <input
+                    type="text"
+                    value={item}
+                    onChange={(e) => updateIdealFor(index, e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                    placeholder="e.g., You need daily heart & circulation support"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeIdealFor(index)}
+                    className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Consult a doctor if... */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-lg font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+                  <span className="text-2xl">⚠</span>
+                  Consult a doctor if...
+                </label>
+                <button
+                  type="button"
+                  onClick={addConsultDoctor}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Plus size={16} />
+                  Add Item
+                </button>
+              </div>
+              {product.targetAudience.consultDoctor.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex gap-3 items-start p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800"
+                >
+                  <span className="text-orange-600 dark:text-orange-400 mt-2 text-xl">
+                    ⚠
+                  </span>
+                  <input
+                    type="text"
+                    value={item}
+                    onChange={(e) => updateConsultDoctor(index, e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                    placeholder="e.g., You have thyroid or severe autoimmune conditions"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeConsultDoctor(index)}
+                    className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 11:
+        return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <label className="text-2xl font-medium text-gray-700 dark:text-gray-300">
@@ -1942,7 +2135,7 @@ export default function EditProduct() {
           </div>
         );
 
-      case 11:
+      case 12:
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
