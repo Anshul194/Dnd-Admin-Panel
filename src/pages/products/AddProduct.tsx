@@ -113,6 +113,10 @@ interface ProductState {
   searchKeywords: string[];
   qa: QAItem[];
   targetAudience: TargetAudience;
+  comparison?: {
+    headers: string[];
+    rows: { title: string; cells: string[] }[];
+  };
   _id?: string; // Add this if you want to store product id after creation
 }
 
@@ -150,6 +154,10 @@ export default function AddProduct() {
       idealFor: [""],
       consultDoctor: [""],
     },
+    comparison: {
+      headers: [""],
+      rows: [{ title: "", cells: [""] }],
+    },
     custom_template: false,
     storyVideoUrl: "",
     templateId: "",
@@ -172,6 +180,7 @@ export default function AddProduct() {
     { id: 11, name: "Template", icon: Layout, color: "bg-indigo-500" },
     // faq
     { id: 12, name: "FAQ", icon: HelpCircle, color: "bg-gray-500" },
+    { id: 13, name: "Comparison", icon: Layout, color: "bg-emerald-500" },
   ];
 
   // Search Keywords handlers
@@ -577,6 +586,79 @@ export default function AddProduct() {
     }
   };
 
+  // Comparison handlers
+  const addComparisonHeader = () => {
+    setProduct((prev) => ({
+      ...prev,
+      comparison: {
+        ...(prev.comparison || { headers: [""], rows: [] }),
+        headers: [...(prev.comparison?.headers || [""]), ""],
+        rows: (prev.comparison?.rows || []).map((r) => ({
+          ...r,
+          cells: [...(r.cells || []), ""],
+        })),
+      },
+    }));
+  };
+
+  const removeComparisonHeader = (index: number) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const headers = comp.headers.filter((_, i) => i !== index);
+      const rows = comp.rows.map((r) => ({ ...r, cells: r.cells.filter((_, i) => i !== index) }));
+      return { ...prev, comparison: { headers, rows } };
+    });
+  };
+
+  const updateComparisonHeader = (index: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const headers = comp.headers.map((h, i) => (i === index ? value : h));
+      return { ...prev, comparison: { ...comp, headers } };
+    });
+  };
+
+  const addComparisonRow = () => {
+    setProduct((prev) => ({
+      ...prev,
+      comparison: {
+        ...(prev.comparison || { headers: [""], rows: [] }),
+        rows: [
+          ...(prev.comparison?.rows || []),
+          { title: "", cells: prev.comparison?.headers.map(() => "") || [""] },
+        ],
+      },
+    }));
+  };
+
+  const removeComparisonRow = (index: number) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.filter((_, i) => i !== index);
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
+  const updateComparisonRowTitle = (rowIndex: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.map((r, i) => (i === rowIndex ? { ...r, title: value } : r));
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
+  const updateComparisonCell = (rowIndex: number, cellIndex: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.map((r, i) => {
+        if (i !== rowIndex) return r;
+        const cells = r.cells.map((c, ci) => (ci === cellIndex ? value : c));
+        return { ...r, cells };
+      });
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
   const handleSubmit = async () => {
     if (!product.name) {
       toast.error("Product name is required.", {
@@ -696,6 +778,11 @@ export default function AddProduct() {
       formData.append(`targetAudience.consultDoctor[${index}]`, item);
     });
 
+    // Add comparison as JSON string
+    if (product.comparison) {
+      formData.append("comparison", JSON.stringify(product.comparison));
+    }
+
     if (product.custom_template) {
       formData.append("custom_template", "true");
       formData.append("templateId", product.templateId);
@@ -802,6 +889,10 @@ export default function AddProduct() {
           targetAudience: {
             idealFor: [""],
             consultDoctor: [""],
+          },
+          comparison: {
+            headers: [""],
+            rows: [{ title: "", cells: [""] }],
           },
           custom_template: false,
           templateId: "",
@@ -2057,6 +2148,103 @@ export default function AddProduct() {
                 </div>
               </div>
             ))}
+          </div>
+        );
+
+      case 13:
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Comparison Table
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={addComparisonHeader}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg transition-all duration-200 shadow-md"
+                >
+                  <Plus size={16} />
+                  Add Column
+                </button>
+                <button
+                  type="button"
+                  onClick={addComparisonRow}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg transition-all duration-200 shadow-md"
+                >
+                  <Plus size={16} />
+                  Add Row
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {product.comparison?.headers.map((h, hi) => (
+                  <div key={hi} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={h}
+                      onChange={(e) => updateComparisonHeader(hi, e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                      placeholder={`Column ${hi + 1} header`}
+                    />
+                    {product.comparison && product.comparison.headers.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeComparisonHeader(hi)}
+                        className="text-red-500 hover:text-red-700 p-2 rounded"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                {product.comparison?.rows.map((row, ri) => (
+                  <div
+                    key={ri}
+                    className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900"
+                  >
+                    <div className="flex justify-between items-center mb-3">
+                      <input
+                        type="text"
+                        value={row.title}
+                        onChange={(e) => updateComparisonRowTitle(ri, e.target.value)}
+                        className="w-2/3 rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Row title"
+                      />
+                      <div className="flex items-center gap-2">
+                        {product.comparison && (
+                          <button
+                            type="button"
+                            onClick={() => removeComparisonRow(ri)}
+                            className="text-red-500 hover:text-red-700 p-2 rounded"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {row.cells.map((cell, ci) => (
+                        <input
+                          key={ci}
+                          type="text"
+                          value={cell}
+                          onChange={(e) => updateComparisonCell(ri, ci, e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder={`Cell ${ci + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
 
