@@ -796,12 +796,30 @@ export default function EditProduct() {
         isFrequentlyPurchased: data.isFrequentlyPurchased || false,
         comparison: (() => {
           const comp = data.comparison ?? data.comparisonTable ?? null;
-          if (!comp) return { headers: [""], rows: [{ title: "", cells: [""] }] };
+          if (!comp) return { headers: [""], rows: [{ title: "", cells: [""], note: "", whyExcels: "" }] };
           try {
-            if (typeof comp === "string") return JSON.parse(comp);
-            return comp;
+            let parsed = typeof comp === "string" ? JSON.parse(comp) : comp;
+            // Handle nested "default" structure if present
+            if (parsed.default && (parsed.default.headers || parsed.default.rows)) {
+              parsed = {
+                headers: parsed.headers || parsed.default.headers || [],
+                rows: parsed.rows || parsed.default.rows || [],
+              };
+            }
+            // Ensure headers and rows exist
+            if (!parsed.headers) parsed.headers = [];
+            if (!parsed.rows) parsed.rows = [];
+            // Ensure all rows have note and whyExcels fields
+            parsed.rows = parsed.rows.map((row: any) => ({
+              title: row.title || "",
+              cells: Array.isArray(row.cells) ? row.cells : [],
+              note: row.note || "",
+              whyExcels: row.whyExcels || "",
+            }));
+            return parsed;
           } catch (e) {
-            return { headers: [""], rows: [{ title: "", cells: [""] }] };
+            console.error("Error parsing comparison data:", e);
+            return { headers: [""], rows: [{ title: "", cells: [""], note: "", whyExcels: "" }] };
           }
         })(),
       });
@@ -946,7 +964,12 @@ export default function EditProduct() {
         ...(prev.comparison || { headers: [""], rows: [] }),
         rows: [
           ...(prev.comparison?.rows || []),
-          { title: "", cells: prev.comparison?.headers.map(() => "") || [""] },
+          { 
+            title: "", 
+            cells: prev.comparison?.headers.map(() => "") || [""],
+            note: "",
+            whyExcels: "",
+          },
         ],
       },
     }));
@@ -976,6 +999,26 @@ export default function EditProduct() {
         const cells = r.cells.map((c, ci) => (ci === cellIndex ? value : c));
         return { ...r, cells };
       });
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
+  const updateComparisonNote = (rowIndex: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.map((r, i) => 
+        i === rowIndex ? { ...r, note: value } : r
+      );
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
+  const updateComparisonWhyExcels = (rowIndex: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.map((r, i) => 
+        i === rowIndex ? { ...r, whyExcels: value } : r
+      );
       return { ...prev, comparison: { ...comp, rows } };
     });
   };
@@ -1735,7 +1778,7 @@ export default function EditProduct() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                         {row.cells.map((cell, ci) => (
                           <input
                             key={ci}
@@ -1746,6 +1789,23 @@ export default function EditProduct() {
                             placeholder={`Cell ${ci + 1}`}
                           />
                         ))}
+                      </div>
+
+                      <div className="space-y-3">
+                        <textarea
+                          value={row.note || ""}
+                          onChange={(e) => updateComparisonNote(ri, e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder="Description/Note"
+                          rows={2}
+                        />
+                        <textarea
+                          value={row.whyExcels || ""}
+                          onChange={(e) => updateComparisonWhyExcels(ri, e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder="Why [Product Name] Excels (e.g., Our 9-herb blend creates a compound effect...)"
+                          rows={2}
+                        />
                       </div>
                     </div>
                   ))}

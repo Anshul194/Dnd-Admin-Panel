@@ -625,7 +625,12 @@ export default function AddProduct() {
         ...(prev.comparison || { headers: [""], rows: [] }),
         rows: [
           ...(prev.comparison?.rows || []),
-          { title: "", cells: prev.comparison?.headers.map(() => "") || [""] },
+          { 
+            title: "", 
+            cells: prev.comparison?.headers.map(() => "") || [""],
+            note: "",
+            whyExcels: "",
+          },
         ],
       },
     }));
@@ -655,6 +660,26 @@ export default function AddProduct() {
         const cells = r.cells.map((c, ci) => (ci === cellIndex ? value : c));
         return { ...r, cells };
       });
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
+  const updateComparisonNote = (rowIndex: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.map((r, i) => 
+        i === rowIndex ? { ...r, note: value } : r
+      );
+      return { ...prev, comparison: { ...comp, rows } };
+    });
+  };
+
+  const updateComparisonWhyExcels = (rowIndex: number, value: string) => {
+    setProduct((prev) => {
+      const comp = prev.comparison || { headers: [], rows: [] };
+      const rows = comp.rows.map((r, i) => 
+        i === rowIndex ? { ...r, whyExcels: value } : r
+      );
       return { ...prev, comparison: { ...comp, rows } };
     });
   };
@@ -2229,7 +2254,7 @@ export default function AddProduct() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                       {row.cells.map((cell, ci) => (
                         <input
                           key={ci}
@@ -2240,6 +2265,23 @@ export default function AddProduct() {
                           placeholder={`Cell ${ci + 1}`}
                         />
                       ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      <textarea
+                        value={row.note || ""}
+                        onChange={(e) => updateComparisonNote(ri, e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Description/Note"
+                        rows={2}
+                      />
+                      <textarea
+                        value={row.whyExcels || ""}
+                        onChange={(e) => updateComparisonWhyExcels(ri, e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Why [Product Name] Excels (e.g., Our 9-herb blend creates a compound effect...)"
+                        rows={2}
+                      />
                     </div>
                   </div>
                 ))}
