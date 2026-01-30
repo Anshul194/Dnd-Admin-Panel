@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Sparkles } from "lucide-react";
 
@@ -10,7 +10,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { createBlog, fetchBlogById, updateBlog } from "../../store/slices/blog";
 import CustomEditor from "../../components/common/TextEditor";
 import { useParams, useNavigate } from "react-router";
-const Image_url = import.meta.env.VITE_IMAGE_URL;
+import { getImageUrl } from "../../utils/imageHelper";
 interface BlogImage {
   file: File;
   alt: string;
@@ -23,7 +23,7 @@ export default function EditBlog() {
     slug: "",
     author: "",
     tags: [] as string[],
-    thumbnail: null as File | null,
+    thumbnail: null as File | string | null,
     thumbnailAlt: "",
   });
 
@@ -133,7 +133,8 @@ export default function EditBlog() {
     formData.append("slug", blog.slug);
     formData.append("content", blog.content);
     formData.append("author", blog.author);
-    formData.append("tags", blog.tags);
+    // Convert tags array to JSON string for FormData
+    formData.append("tags", JSON.stringify(blog.tags));
 
     if (typeof blog.thumbnail !== "string" && blog.thumbnail) {
       formData.append("thumbnail[url]", blog.thumbnail);
@@ -147,9 +148,18 @@ export default function EditBlog() {
       formData.append(`images[${index}][alt]`, image.alt);
     });
 
+    if (!blogId) {
+      toast.error("Blog ID is missing.", {
+        duration: 8000,
+        position: "top-right",
+      });
+      return;
+    }
+
     try {
+      // Type assertion: FormData is accepted by the API even though TypeScript expects Partial<Blog>
       const updatedBlog = await dispatch(
-        updateBlog({ id: blogId, data: formData })
+        updateBlog({ id: blogId, data: formData as any })
       ).unwrap();
 
       console.log("Updated Blog:", updatedBlog);
@@ -185,11 +195,25 @@ export default function EditBlog() {
     }
   };
 
-  const getImageUrl = (file: File | string) => {
-    if (typeof file === "string") {
-      return `${Image_url}/${file}`;
+  const getImageUrlForBlog = (file: File | string | null | undefined) => {
+    if (!file) return "";
+    
+    // If it's a File object, create a blob URL
+    if (file instanceof File) {
+      return URL.createObjectURL(file);
     }
-    return URL.createObjectURL(file);
+    
+    // If it's a string, use the shared image helper
+    if (typeof file === "string") {
+      return getImageUrl(file);
+    }
+    
+    // If it's an object with a url property
+    if (typeof file === "object" && file !== null && "url" in file) {
+      return getImageUrl((file as any).url);
+    }
+    
+    return "";
   };
 
   const getData = async () => {
@@ -206,12 +230,8 @@ export default function EditBlog() {
       const response = await dispatch(fetchBlogById(blogId)).unwrap();
       console.log("Fetched Blog Data:", response);
       
-      // Handle different response structures
-      const data = 
-        response?.blog ||
-        response?.data?.blog ||
-        response?.data ||
-        response;
+      // fetchBlogById returns Blog directly, not a wrapped response
+      const data = response;
 
       if (data && (data._id || data.title)) {
         setBlog({
@@ -220,8 +240,8 @@ export default function EditBlog() {
           content: data?.content || "",
           author: data?.author || "",
           tags: Array.isArray(data?.tags) ? data.tags : [],
-          thumbnail: data?.thumbnail?.url || data?.thumbnail || null,
-          thumbnailAlt: data?.thumbnail?.alt || "",
+          thumbnail: (data?.thumbnail as any)?.url || (typeof data?.thumbnail === 'string' ? data.thumbnail : null) || null,
+          thumbnailAlt: (data?.thumbnail as any)?.alt || "",
         });
         
         const blogImages = data?.images?.map((img: any) => ({
@@ -351,7 +371,7 @@ export default function EditBlog() {
                 /> */}
                   <CustomEditor
                     value={blog.content}
-                    onChange={(value) => setBlog({ ...blog, content: value })}
+                    onChange={(value: string) => setBlog({ ...blog, content: value })}
                   />
                 </div>
               </div>
@@ -426,7 +446,7 @@ export default function EditBlog() {
                   {blog.thumbnail && (
                     <div className="mt-3 space-y-2">
                       <img
-                        src={getImageUrl(blog.thumbnail)}
+                        src={getImageUrlForBlog(blog.thumbnail)}
                         alt="Thumbnail Preview"
                         className="max-w-xs h-auto rounded border"
                       />
@@ -463,7 +483,7 @@ export default function EditBlog() {
                           className="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded"
                         >
                           <img
-                            src={getImageUrl(image.file)}
+                            src={getImageUrlForBlog(image.file)}
                             alt={`Preview ${index + 1}`}
                             className="w-24 h-24 object-cover rounded"
                           />

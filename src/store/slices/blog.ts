@@ -10,6 +10,7 @@ interface Image {
 export interface Blog {
   _id: string;
   title: string;
+  slug?: string;
   content: string;
   author: string;
   images: Image[];
