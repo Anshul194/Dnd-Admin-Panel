@@ -146,10 +146,17 @@ export default function EditOrder() {
       const upMethod = String(selectedMethod).toUpperCase();
       const isBluedart = upMethod === "BLUEDART";
       const isDelhivery = upMethod === "DELHIVERY";
-      const serviceCode = isBluedart ? "D" : isDelhivery ? "SD1" : selectedService;
+
+      // Resolve a service name (prefer name from availableServices when selected by code)
+      const resolvedServiceName = (() => {
+        const pickCode = isBluedart ? "D" : isDelhivery ? "SD1" : selectedService;
+        if (!pickCode) return "";
+        const found = availableServices.find((s) => String(s.code) === String(pickCode));
+        return found?.name || String(pickCode);
+      })();
 
       // If user hasn't picked a service and it's not one of the auto-pick ones, just show success for the metadata
-      if (!serviceCode && !isBluedart && !isDelhivery) {
+      if (!resolvedServiceName && !isBluedart && !isDelhivery) {
         setPopup({
           isVisible: true,
           message: "Order updated successfully!",
@@ -170,12 +177,12 @@ export default function EditOrder() {
       const payload: Record<string, unknown> = {
         orderId: orderId,
         courier: upMethod,
-        serviceCode: serviceCode,
+        serviceCode: resolvedServiceName,
       };
 
       try {
         const response = await axiosInstance.post(
-          "/orders/shipment",
+          "/orders/shipment/create",
           payload
         );
         console.log("shipping response ===>", response.data);
