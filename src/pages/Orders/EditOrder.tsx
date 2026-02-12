@@ -18,6 +18,7 @@ export default function EditOrder() {
   const [deliveryOption, setDeliveryOption] = useState("");
   const [labelLoading, setLabelLoading] = useState(false);
   const [awbLoading, setAwbLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const [orderStatus, setOrderStatus] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("DTDC");
@@ -401,6 +402,40 @@ export default function EditOrder() {
     }
   };
 
+  const cancelShipment = async () => {
+    try {
+      setCancelLoading(true);
+
+      const courier = String(currentOrder?.shipping_details?.platform || "").toLowerCase();
+
+      const response = await axiosInstance.post("/orders/shipment/cancel", {
+        courier,
+        orderId: orderId,
+      });
+
+      setCancelLoading(false);
+
+      setPopup({
+        isVisible: true,
+        message: response?.data?.message || "Shipment cancelled successfully.",
+        type: "success",
+      });
+
+      // refresh order data
+      try {
+        await dispatch(fetchOrderById(orderId)).unwrap();
+      } catch (e) {
+        // ignore
+      }
+      dispatch(fetchOrders({ page: 1, limit: 10, sortField: "createdAt", sortOrder: "desc" }));
+    } catch (err: any) {
+      console.error("Error cancelling shipment:", err);
+      setCancelLoading(false);
+      const errMsg = err?.response?.data?.message || "Failed to cancel shipment. Please try again.";
+      setPopup({ isVisible: true, message: errMsg, type: "error" });
+    }
+  };
+
   useEffect(() => {
     if (orderId) {
       getData();
@@ -516,8 +551,7 @@ export default function EditOrder() {
                     </p>
                   </div>
                   <div>
-                    {currentOrder?.shipping_details?.reference_number ||
-                      (currentOrder?.shipping_details?.platform && (
+                    {(currentOrder?.shipping_details?.reference_number || currentOrder?.shipping_details?.platform) && (
                         <p className="font-medium text-gray-800 dark:text-white">
                           {currentOrder?.shipping_details?.labelUrl ? (
                             <div>
@@ -622,7 +656,25 @@ export default function EditOrder() {
                             </>
                           )}
                         </p>
-                      ))}
+                      )}
+
+                      {currentOrder?.shipping_details?.reference_number && (
+                        <div className="mt-3">
+                          {currentOrder?.shipping_details?.cancelled ? (
+                            <div className="px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm w-fit">
+                              Shipment already cancelled
+                            </div>
+                          ) : (
+                            <button
+                              onClick={cancelShipment}
+                              disabled={cancelLoading}
+                              className="px-4 py-1 rounded-full bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60"
+                            >
+                              {cancelLoading ? "Cancelling..." : "Cancel Shipment"}
+                            </button>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
