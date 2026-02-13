@@ -408,9 +408,37 @@ export default function EditOrder() {
 
       const courier = String(currentOrder?.shipping_details?.platform || "").toLowerCase();
 
+      // try to extract a tokenNumber from the raw response if present
+      const extractTokenNumber = (obj: any): string | undefined => {
+        if (!obj || typeof obj !== "object") return undefined;
+        const stack: any[] = [obj];
+        while (stack.length) {
+          const cur = stack.pop();
+          if (!cur || typeof cur !== "object") continue;
+          for (const k of Object.keys(cur)) {
+            try {
+              const v = cur[k];
+              if (v == null) continue;
+              if (typeof v === "string" || typeof v === "number") {
+                if (/(token|tokenNumber|token_no|awbToken|waybillToken|waybill)/i.test(k)) {
+                  return String(v);
+                }
+              }
+              if (typeof v === "object") stack.push(v);
+            } catch (e) {
+              // ignore property access errors
+            }
+          }
+        }
+        return undefined;
+      };
+
+      const tokenNumber = extractTokenNumber(currentOrder?.shipping_details?.raw_response);
+
       const response = await axiosInstance.post("/orders/shipment/cancel", {
         courier,
         orderId: orderId,
+        ...(tokenNumber ? { tokenNumber } : {}),
       });
 
       setCancelLoading(false);
