@@ -60,6 +60,11 @@ const staticItems: NavItem[] = [
     path: "/meta/analytics",
   },
   {
+    icon: <BoxIcon className="w-5 h-5" />,
+    name: "Shipment Dashboard",
+    path: "/orders/shipment-dashboard",
+  },
+  {
     icon: <UsersIcon className="w-5 h-5" />,
     name: "Roles",
     subItems: [

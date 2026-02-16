@@ -86,6 +86,7 @@ import BulkPincodeImport from "./pages/Shipping/BulkPincodeImport";
 import SettingsList from "./pages/Settings/SettingsList";
 import OrderList from "./pages/Orders/OrderList";
 import EditOrder from "./pages/Orders/EditOrder";
+import ShipmentDashboard from "./pages/Orders/ShipmentDashboard";
 import ContactList from "./pages/pages/contact/ContactList";
 import EditContact from "./pages/pages/contact/EditContact";
 import ViewContact from "./pages/pages/contact/ViewContact";
@@ -287,6 +288,7 @@ export default function App() {
               {/* order management */}
 
               <Route path="/orders/list" element={<OrderList />} />
+              <Route path="/orders/shipment-dashboard" element={<ShipmentDashboard />} />
               <Route path="/orders/:id" element={<EditOrder />} />
 
               {/* Page Management Routes */}
