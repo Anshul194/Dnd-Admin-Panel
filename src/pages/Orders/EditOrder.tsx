@@ -485,6 +485,10 @@ export default function EditOrder() {
     ? String(currentOrder?.shipping_details?.platform).toUpperCase()
     : "";
 
+  const isShipmentReadOnly =
+    !!currentOrder?.shipping_details?.reference_number &&
+    currentOrder?.status !== "cancelled";
+
   return (
     <div>
       <Toaster position="top-right" />
@@ -580,50 +584,94 @@ export default function EditOrder() {
                   </div>
                   <div>
                     {(currentOrder?.shipping_details?.reference_number || currentOrder?.shipping_details?.platform) && (
-                        <p className="font-medium text-gray-800 dark:text-white">
-                          {currentOrder?.shipping_details?.labelUrl ? (
-                            <div>
+                      <p className="font-medium text-gray-800 dark:text-white">
+                        {currentOrder?.shipping_details?.labelUrl ? (
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Label
+                            </p>
+                            <a
+                              target="_blank"
+                              rel="noreferrer"
+                              href={
+                                currentOrder?.shipping_details?.platform ===
+                                  "delhivery"
+                                  ? currentOrder?.shipping_details?.labelUrl
+                                  : `${image_url}${currentOrder?.shipping_details?.labelUrl}`
+                              }
+                              className="font-medium text-blue-500 underline cursor-pointer dark:text-white"
+                            >
+                              Download Label
+                            </a>
+                          </div>
+                        ) : String(
+                          currentOrder?.shipping_details?.platform
+                        ).toUpperCase() === "BLUEDART" ? (
+                          <div className="mt-2 flex items-center gap-3">
+                            {currentOrder?.shipping_details?.raw_response
+                              ?.GenerateWayBillResult?.AWBPrintContent ? (
+                              <>
+                                <button
+                                  onClick={openAwbPdf}
+                                  className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
+                                >
+                                  {awbLoading ? "Opening..." : "Open AWB"}
+                                </button>
+                              </>
+                            ) : (
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Label
+                                AWB not available
                               </p>
-                              <a
-                                target="_blank"
-                                rel="noreferrer"
-                                href={
-                                  currentOrder?.shipping_details?.platform ===
-                                    "delhivery"
-                                    ? currentOrder?.shipping_details?.labelUrl
-                                    : `${image_url}${currentOrder?.shipping_details?.labelUrl}`
-                                }
-                                className="font-medium text-blue-500 underline cursor-pointer dark:text-white"
+                            )}
+                          </div>
+                        ) : String(
+                          currentOrder?.shipping_details?.platform
+                        ).toUpperCase() === "DELHIVERY" ? (
+                          <div>
+                            {labelLoading ? (
+                              <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
+                                Generating...
+                              </div>
+                            ) : (
+                              <button
+                                onClick={GenerateLabel}
+                                className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
                               >
-                                Download Label
-                              </a>
-                            </div>
-                          ) : String(
-                            currentOrder?.shipping_details?.platform
-                          ).toUpperCase() === "BLUEDART" ? (
+                                Generate Label
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <>
                             <div className="mt-2 flex items-center gap-3">
-                              {currentOrder?.shipping_details?.raw_response
-                                ?.GenerateWayBillResult?.AWBPrintContent ? (
-                                <>
-                                  <button
-                                    onClick={openAwbPdf}
-                                    className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
-                                  >
-                                    {awbLoading ? "Opening..." : "Open AWB"}
-                                  </button>
-                                </>
-                              ) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                  AWB not available
-                                </p>
-                              )}
-                            </div>
-                          ) : String(
-                            currentOrder?.shipping_details?.platform
-                          ).toUpperCase() === "DELHIVERY" ? (
-                            <div>
+                              <select
+                                value={selectedLabelCode}
+                                onChange={(e) =>
+                                  setSelectedLabelCode(e.target.value)
+                                }
+                                className="rounded border border-gray-300 px-3 py-2 bg-white text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                              >
+                                <option value="">Select </option>
+                                <option value="SHIP_LABEL_A4">
+                                  Shipping Label A4
+                                </option>
+                                <option value="SHIP_LABEL_A6">
+                                  Shipping Label A6
+                                </option>
+                                <option value="SHIP_LABEL_POD">
+                                  Shipping Label POD
+                                </option>
+                                <option value="SHIP_LABEL_4X6">
+                                  Shipping Label 4x6
+                                </option>
+                                <option value="ROUTE_LABEL_A4">
+                                  Routing Label A4
+                                </option>
+                                <option value="ROUTE_LABEL_4X4">
+                                  Routing Label 4x4
+                                </option>
+                              </select>
+
                               {labelLoading ? (
                                 <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
                                   Generating...
@@ -637,72 +685,28 @@ export default function EditOrder() {
                                 </button>
                               )}
                             </div>
-                          ) : (
-                            <>
-                              <div className="mt-2 flex items-center gap-3">
-                                <select
-                                  value={selectedLabelCode}
-                                  onChange={(e) =>
-                                    setSelectedLabelCode(e.target.value)
-                                  }
-                                  className="rounded border border-gray-300 px-3 py-2 bg-white text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                                >
-                                  <option value="">Select </option>
-                                  <option value="SHIP_LABEL_A4">
-                                    Shipping Label A4
-                                  </option>
-                                  <option value="SHIP_LABEL_A6">
-                                    Shipping Label A6
-                                  </option>
-                                  <option value="SHIP_LABEL_POD">
-                                    Shipping Label POD
-                                  </option>
-                                  <option value="SHIP_LABEL_4X6">
-                                    Shipping Label 4x6
-                                  </option>
-                                  <option value="ROUTE_LABEL_A4">
-                                    Routing Label A4
-                                  </option>
-                                  <option value="ROUTE_LABEL_4X4">
-                                    Routing Label 4x4
-                                  </option>
-                                </select>
+                          </>
+                        )}
+                      </p>
+                    )}
 
-                                {labelLoading ? (
-                                  <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
-                                    Generating...
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={GenerateLabel}
-                                    className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
-                                  >
-                                    Generate Label
-                                  </button>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </p>
-                      )}
-
-                      {currentOrder?.shipping_details?.reference_number && (
-                        <div className="mt-3">
-                          {currentOrder?.shipping_details?.cancelled ? (
-                            <div className="px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm w-fit">
-                              Shipment already cancelled
-                            </div>
-                          ) : (
-                            <button
-                              onClick={cancelShipment}
-                              disabled={cancelLoading}
-                              className="px-4 py-1 rounded-full bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60"
-                            >
-                              {cancelLoading ? "Cancelling..." : "Cancel Shipment"}
-                            </button>
-                          )}
-                        </div>
-                      )}
+                    {currentOrder?.shipping_details?.reference_number && (
+                      <div className="mt-3">
+                        {currentOrder?.shipping_details?.cancelled ? (
+                          <div className="px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm w-fit">
+                            Shipment already cancelled
+                          </div>
+                        ) : (
+                          <button
+                            onClick={cancelShipment}
+                            disabled={cancelLoading}
+                            className="px-4 py-1 rounded-full bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60"
+                          >
+                            {cancelLoading ? "Cancelling..." : "Cancel Shipment"}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -959,7 +963,8 @@ export default function EditOrder() {
                     <select
                       value={orderStatus}
                       onChange={(e) => setOrderStatus(e.target.value)}
-                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      disabled={isShipmentReadOnly}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800"
                     >
                       <option value="">Select Status</option>
                       {ORDER_STATUS_OPTIONS.map((status) => (
@@ -977,7 +982,8 @@ export default function EditOrder() {
                     <select
                       value={deliveryOption}
                       onChange={(e) => setDeliveryOption(e.target.value)}
-                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      disabled={isShipmentReadOnly}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800"
                     >
                       <option value="">Select Option</option>
                       {DELIVERY_OPTIONS.map((option) => (
@@ -1008,7 +1014,8 @@ export default function EditOrder() {
                           setSelectedService("");
                         }
                       }}
-                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      disabled={isShipmentReadOnly}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800"
                     >
                       <option value="">Select Method</option>
                       {deleiveryOptions.map((status) => (
@@ -1030,7 +1037,8 @@ export default function EditOrder() {
                         <select
                           value={selectedService}
                           onChange={(e) => setSelectedService(e.target.value)}
-                          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                          disabled={isShipmentReadOnly}
+                          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800"
                         >
                           {availableServices
                             .filter((option) => option.courier === selectedMethod)
@@ -1056,9 +1064,9 @@ export default function EditOrder() {
                     <button
                       type="submit"
                       className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={loading}
+                      disabled={loading || isShipmentReadOnly}
                     >
-                      {loading ? "Updating Order..." : "Update Order"}
+                      {loading ? "Updating Order..." : isShipmentReadOnly ? "Shipment Created" : "Update Order"}
                     </button>
                   </div>
                 )}
