@@ -12,6 +12,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import axiosInstance from "../../services/axiosConfig";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { useSearchParams, Link } from "react-router-dom";
@@ -25,7 +26,11 @@ const OrderList: React.FC = () => {
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [shipmentBookedFilter, setShipmentBookedFilter] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingResult, setBookingResult] = useState<any>(null);
+  const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialLoadRef = useRef(true);
 
@@ -43,15 +48,19 @@ const OrderList: React.FC = () => {
 
   // Single useEffect to handle all data fetching
   useEffect(() => {
-    const status = searchParams.get('status') || "";
+    const status = searchParams.get("status") || "";
+    const bookedParam = searchParams.get("isShipmentBooked") || "";
 
-    // Update status filter if it changed
-    if (status !== statusFilter) {
-      setStatusFilter(status);
-    }
+    // Update filters if they changed
+    if (status !== statusFilter) setStatusFilter(status);
+    if (bookedParam !== shipmentBookedFilter) setShipmentBookedFilter(bookedParam);
 
     // Only fetch on initial load or when dependencies actually change
-    if (initialLoadRef.current || status !== statusFilter) {
+    if (
+      initialLoadRef.current ||
+      status !== statusFilter ||
+      bookedParam !== shipmentBookedFilter
+    ) {
       initialLoadRef.current = false;
 
       dispatch(
@@ -62,6 +71,7 @@ const OrderList: React.FC = () => {
           sortField: "createdAt",
           sortOrder: "desc",
           ...(status && { status }),
+          ...(bookedParam !== "" && { isShipmentBooked: bookedParam === "true" }),
         })
       );
     }
@@ -87,6 +97,7 @@ const OrderList: React.FC = () => {
           sortField: "createdAt",
           sortOrder: "desc",
           ...(statusFilter && { status: statusFilter }),
+          ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
         })
       );
     }
@@ -101,6 +112,7 @@ const OrderList: React.FC = () => {
         sortField: "createdAt",
         sortOrder: "desc",
         ...(statusFilter && { status: statusFilter }),
+        ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
       })
     );
   };
@@ -116,6 +128,23 @@ const OrderList: React.FC = () => {
         sortField: "createdAt",
         sortOrder: "desc",
         ...(status && { status }),
+        ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
+      })
+    );
+  };
+
+  const handleShipmentBookedChange = (val: string) => {
+    setShipmentBookedFilter(val);
+    // Immediately fetch with new shipment booked filter
+    dispatch(
+      fetchOrders({
+        page: 1,
+        limit: pagination.limit,
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
+        ...(statusFilter && { status: statusFilter }),
+        ...(val !== "" && { isShipmentBooked: val === "true" }),
       })
     );
   };
@@ -123,6 +152,7 @@ const OrderList: React.FC = () => {
   const handleResetFilters = () => {
     setSearchInput("");
     setStatusFilter("");
+    setShipmentBookedFilter("");
     dispatch(setSearchQuery(""));
   };
 
@@ -177,6 +207,7 @@ const OrderList: React.FC = () => {
             sortField: "createdAt",
             sortOrder: "desc",
             ...(statusFilter && { status: statusFilter }),
+              ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
           })
         );
       } else {
@@ -185,6 +216,18 @@ const OrderList: React.FC = () => {
           type: "error",
           isVisible: true,
         });
+          // Refresh the orders list even on failure
+          dispatch(
+            fetchOrders({
+              page: pagination.page,
+              limit: pagination.limit,
+              search: searchQuery || "",
+              sortField: "createdAt",
+              sortOrder: "desc",
+              ...(statusFilter && { status: statusFilter }),
+              ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
+            })
+          );
       }
     } catch (error) {
       console.error("Error uploading CSV:", error);
@@ -193,6 +236,18 @@ const OrderList: React.FC = () => {
         type: "error",
         isVisible: true,
       });
+        // Refresh the orders list even on error
+        dispatch(
+          fetchOrders({
+            page: pagination.page,
+            limit: pagination.limit,
+            search: searchQuery || "",
+            sortField: "createdAt",
+            sortOrder: "desc",
+            ...(statusFilter && { status: statusFilter }),
+            ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
+          })
+        );
     } finally {
       setUploading(false);
       // Reset file input
@@ -292,6 +347,49 @@ const OrderList: React.FC = () => {
               <Upload className="h-4 w-4" />
               {uploading ? "Uploading..." : "Upload CSV"}
             </button>
+            {/* Book All Pending Shipments Button */}
+            <button
+              onClick={async () => {
+                if (bookingLoading) return;
+                try {
+                  setBookingLoading(true);
+                  setBookingResult(null);
+                  // Call bulk booking endpoint - using GET with body as the server expects
+                  const resp = await axiosInstance.request({
+                    url: "/orders/shipment/bulk",
+                    method: "get",
+                    data: {
+                      courier: "dtdc",
+                    },
+                  });
+                  const data = resp?.data;
+                  setBookingResult(data);
+                  setBookingModalVisible(true);
+
+                  // Auto refresh order list
+                  dispatch(
+                    fetchOrders({
+                      page: pagination.page,
+                      limit: pagination.limit,
+                      search: searchQuery || "",
+                      sortField: "createdAt",
+                      sortOrder: "desc",
+                      ...(statusFilter && { status: statusFilter }),
+                      ...(shipmentBookedFilter !== "" && { isShipmentBooked: shipmentBookedFilter === "true" }),
+                    })
+                  );
+                } catch (err: any) {
+                  setBookingResult({ success: false, message: err?.message || "Booking failed" });
+                  setBookingModalVisible(true);
+                } finally {
+                  setBookingLoading(false);
+                }
+              }}
+              disabled={bookingLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {bookingLoading ? "Booking..." : "Book All Pending Shipments"}
+            </button>
             <input
               ref={fileInputRef}
               type="file"
@@ -332,6 +430,20 @@ const OrderList: React.FC = () => {
                 <option value="delivered">Delivered</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            {/* Shipment Booked Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-gray-400" />
+              <select
+                value={shipmentBookedFilter}
+                onChange={(e) => handleShipmentBookedChange(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              >
+                <option value="">All Shipments</option>
+                <option value="true">Booked</option>
+                <option value="false">Pending</option>
               </select>
             </div>
 
@@ -495,6 +607,80 @@ const OrderList: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Booking Result Modal */}
+      {bookingModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-2xl bg-white rounded-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Bulk Booking Result</h3>
+            {bookingResult ? (
+              <div>
+                {bookingResult.summary ? (
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-gray-500">Total</div>
+                      <div className="text-xl font-bold">{bookingResult.summary.total}</div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-gray-500">Booked</div>
+                      <div className="text-xl font-bold">{bookingResult.summary.booked}</div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-gray-500">Failed</div>
+                      <div className="text-xl font-bold">{bookingResult.summary.failed}</div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="text-sm text-gray-500">Skipped</div>
+                      <div className="text-xl font-bold">{bookingResult.summary.skipped}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600">{bookingResult.message || JSON.stringify(bookingResult)}</p>
+                  </div>
+                )}
+
+                {Array.isArray(bookingResult.details) && bookingResult.details.length > 0 && (
+                  <div className="max-h-56 overflow-auto border rounded p-2 mb-4">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr>
+                          <th className="text-left p-2">Order ID</th>
+                          <th className="text-left p-2">Status</th>
+                          <th className="text-left p-2">Message</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bookingResult.details.map((d: any, i: number) => (
+                          <tr key={i} className="border-t">
+                            <td className="p-2">{d.orderId || d._id || "-"}</td>
+                            <td className="p-2">{d.status || (d.success ? "booked" : "failed")}</td>
+                            <td className="p-2">{d.message || d.error || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setBookingModalVisible(false);
+                      setBookingResult(null);
+                    }}
+                    className="px-4 py-2 border rounded-md"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-6 text-center">Processing...</div>
+            )}
+          </div>
+        </div>
+      )}
 
       <PopupAlert
         message={popup.message}

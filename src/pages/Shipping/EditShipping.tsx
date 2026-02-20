@@ -84,6 +84,19 @@ export default function EditShipping() {
     type: "",
   });
 
+  // Service list (for couriers like DTDC)
+  type ServiceOption = {
+    _id?: string;
+    serviceCode?: string;
+    serviceName?: string;
+    isDefaultService?: boolean;
+    [k: string]: any;
+  };
+
+  const [services, setServices] = useState<ServiceOption[]>([]);
+  const [defaultServiceCodes, setDefaultServiceCodes] = useState<string[]>([]);
+  const [servicePriorities, setServicePriorities] = useState<Record<string, number>>({});
+
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector(
     (state: RootState) => state.shipping?.loading || false
@@ -294,6 +307,18 @@ export default function EditShipping() {
     // Clean up data before submission
     const shippingData = {
       ...shipping,
+      ...(isDtdc && defaultServiceCodes.length
+        ? { defaultServices: defaultServiceCodes }
+        : {}),
+      ...(isDtdc && services && services.length
+        ? {
+            services: services.map((s) => ({
+              serviceCode: s.serviceCode || s.serviceCode || s.name || s._id,
+              servicePriority: servicePriorities[String(s.serviceCode ?? s._id ?? s.code ?? s.id ?? "")] ?? 0,
+              isDefaultService: defaultServiceCodes.includes(String(s.serviceCode ?? s._id ?? s.code ?? s.id ?? "")),
+            })),
+          }
+        : {}),
       freeShippingThreshold: shipping.freeShippingThreshold
         ? parseFloat(shipping.freeShippingThreshold.toString())
         : null,
@@ -342,7 +367,8 @@ export default function EditShipping() {
   const getData = async () => {
     try {
       const response = await dispatch(fetchShippingById(id)).unwrap();
-      console.log("Fetched Shipping Data:", response);
+  console.log("Fetched Shipping Data:", response);
+  const rawResp: any = response as any;
       setShipping({
         name: response.name,
         slug: response.slug,
@@ -397,6 +423,33 @@ export default function EditShipping() {
         },
         status: response.status || "active",
       });
+
+      // Try to extract service list from response (if API includes it)
+      const svcList =
+        rawResp.services || rawResp.availableServices || rawResp.serviceList || rawResp.servicesList || [];
+      if (Array.isArray(svcList) && svcList.length > 0) {
+        // normalize services to expected fields (serviceCode/serviceName/isDefaultService)
+        const normalized = svcList.map((s: any) => ({
+          _id: s._id || s.id || undefined,
+          serviceCode: s.serviceCode || s.code || s.service_code || s.codeString || s.name,
+          serviceName: s.serviceName || s.serviceName || s.name || s.service_name || s.title,
+          isDefaultService: Boolean(s.isDefaultService || s.isDefault || s.default),
+          ...s,
+        }));
+        setServices(normalized);
+
+        // If response indicates default services, pick their serviceCodes
+        const foundDefaults = normalized.filter((s: any) => s.isDefaultService).map((s: any) => String(s.serviceCode));
+        if (foundDefaults && foundDefaults.length) setDefaultServiceCodes(foundDefaults);
+
+        // Populate initial priorities map from response
+        const priMap: Record<string, number> = {};
+        normalized.forEach((s: any) => {
+          const code = String(s.serviceCode ?? s._id ?? s.code ?? s.id ?? "");
+          priMap[code] = Number(s.servicePriority ?? s.servicePriority === 0 ? s.servicePriority : s.priority ?? 0) || 0;
+        });
+        setServicePriorities(priMap);
+      }
     } catch (error) {
       console.error("Error fetching shipping data:", error);
       setPopup({
@@ -410,6 +463,19 @@ export default function EditShipping() {
   useEffect(() => {
     getData();
   }, [id]);
+
+  const isDtdc = String(shipping.name || "").toLowerCase().includes("dtdc");
+
+  const handleToggleDefaultService = (serviceCode: string) => {
+    setDefaultServiceCodes((prev) => {
+      if (prev.includes(serviceCode)) return prev.filter((c) => c !== serviceCode);
+      return [...prev, serviceCode];
+    });
+  };
+
+  const handlePriorityChange = (serviceCode: string, value: number) => {
+    setServicePriorities((prev) => ({ ...prev, [serviceCode]: Number(value) || 0 }));
+  };
 
   return (
     <div>
@@ -1145,6 +1211,66 @@ export default function EditShipping() {
                   Inactive shipping methods are not available for selection
                 </p>
               </div>
+            </div>
+
+            {/* Service List Section (only for DTDC shipping names) */}
+            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                Service List
+              </h3>
+
+              {isDtdc ? (
+                services && services.length > 0 ? (
+                  <div className="space-y-2">
+                    {services.map((svc, idx) => {
+                      const code = String(svc.serviceCode ?? svc._id ?? svc.code ?? svc.id ?? idx);
+                      return (
+                        <div
+                          key={code + idx}
+                          className="flex items-center justify-between border p-3 rounded"
+                        >
+                          <div>
+                            <div className="font-medium text-gray-700 dark:text-gray-300">
+                              {svc.serviceName || svc.serviceCode || svc.title || code}
+                            </div>
+                            {svc.description && (
+                              <div className="text-xs text-gray-500">{svc.description}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <label className="text-sm text-gray-600 dark:text-gray-400">Default</label>
+                              <input
+                                type="checkbox"
+                                name={`defaultService-${code}`}
+                                checked={defaultServiceCodes.includes(code)}
+                                onChange={() => handleToggleDefaultService(code)}
+                                className="h-4 w-4 text-blue-600"
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <label className="text-sm text-gray-600 dark:text-gray-400">Priority</label>
+                              <input
+                                type="number"
+                                min={0}
+                                step={1}
+                                value={servicePriorities[code] ?? 0}
+                                onChange={(e) => handlePriorityChange(code, parseInt(e.target.value || "0", 10))}
+                                className="w-20 rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">Services are not available for this shipping method.</div>
+                )
+              ) : (
+                <div className="text-sm text-gray-500">No need to set service for book shipment.</div>
+              )}
             </div>
 
             {/* Submit Button */}
