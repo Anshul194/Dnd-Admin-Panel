@@ -61,6 +61,7 @@ interface FetchOrderParams {
   sortOrder?: "asc" | "desc";
   status?: string;
   paymentStatus?: string;
+  isShipmentBooked?: boolean;
 }
 
 interface Pagination {
@@ -108,6 +109,7 @@ export const fetchOrders = createAsyncThunk<
       sortOrder = "desc",
       status,
       paymentStatus,
+      isShipmentBooked,
     } = params;
 
     const queryParams = new URLSearchParams();
@@ -124,6 +126,8 @@ export const fetchOrders = createAsyncThunk<
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
     if (status) queryParams.append("status", status);
+    if (typeof isShipmentBooked !== "undefined")
+      queryParams.append("isShipmentBooked", String(Boolean(isShipmentBooked)));
 
     const filters: Record<string, any> = {};
     if (search) filters["_id"] = search;
