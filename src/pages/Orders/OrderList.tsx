@@ -506,6 +506,9 @@ const OrderList: React.FC = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Shipment
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created At
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
@@ -543,6 +546,21 @@ const OrderList: React.FC = () => {
                         >
                           {order?.status || "pending"}
                         </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <div className="flex items-center">
+                        {order?.isShipmentBooked ? (
+                          <>
+                            <CheckCircle className="text-green-500 h-5 w-5" />
+                            <span className="ml-1">Booked</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="text-orange-500 h-5 w-5" />
+                            <span className="ml-1">Pending</span>
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
